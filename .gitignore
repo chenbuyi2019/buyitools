@@ -1,7 +1,7 @@
 test
 node_modules
 *.exe
-*.js
+main.js
 package-lock.json
 .debugTemp
 *.zip
