@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <style>
+        body {
+            margin: 0px;
+            padding: 0px;
+            height: 100vh;
+            overflow: hidden;
+            font-size: large;
+            display: flex;
+        }
+
+        button,
+        input {
+            font-size: inherit;
+        }
+
+        #detaillist {
+            flex: 2;
+            height: 99%;
+            padding: 7px;
+            overflow-x: hidden;
+            overflow-y: scroll;
+        }
+
+        #detaillist div {
+            display: flex;
+            padding: 3px;
+            border-bottom: 2px double rgba(0, 0, 0, 0.5);
+        }
+
+        #detaillist time {
+            flex: 4;
+        }
+
+        #detaillist ul {
+            margin: 0px;
+            flex: 6;
+            padding-left: 6px;
+            list-style: none;
+        }
+
+        #detaillist textarea {
+            flex: 6;
+            resize: none;
+            font-family: inherit;
+            height: 150px;
+        }
+
+        #detaillist span {
+            display: inline-block;
+            min-width: 30%;
+            margin-right: 10px;
+            text-align: right;
+        }
+
+        .moneyearn {
+            background-color: #98e898;
+        }
+
+        .moneywaste {
+            background-color: #ff6f6f;
+        }
+
+        .moneyspend {
+            background-color: #ffb1b1;
+        }
+
+        #statspanel {
+            flex: 2;
+            padding: 7px;
+        }
+
+        #statResult table {
+            margin: 3px;
+            border: 1px solid black;
+        }
+
+        #statResult td {
+            border-bottom: 1px solid black;
+            text-align: right;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="detaillist">
+    </div>
+    <div id='statspanel'>
+        <div>
+            <input type="date" id="inputNewDay">
+            <button id="butAddNewDay">新增一日</button>
+        </div>
+        <br>
+        <div>
+            <div id="statbuttons">
+                <button title="35">近35天</button>
+                <button title="62">近两个月</button>
+                <button title="93">近三个月</button>
+                <button title="183">近半年</button>
+                <button title="366">近一年</button>
+            </div>
+            <br>
+            <input type="date" id="inputStartDate">
+            <input type="date" id="inputEndDate">
+            <button id="butDoStat">统计</button>
+            <br>
+            <div id="statResult"></div>
+        </div>
+    </div>
+    <script src="/main.js"></script>
+</body>
+
+</html>

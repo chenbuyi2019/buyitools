@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/jpeg" href="/icon.jpg"/>
+    <title>Javascript 异常</title>
+    <style>
+        body {
+            margin: 0px;
+            padding: 0px;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0px auto;
+            display: flex;
+            height: 100%;
+        }
+
+        #tlist,
+        #tpage {
+            border: 2px dashed black;
+        }
+
+        #tlist {
+            flex: 1;
+        }
+
+        #tlist a {
+            display: block;
+            padding: 8px 6px;
+            font-size: x-large;
+            transition-duration: 0.2s;
+            background-color: aliceblue;
+            text-decoration: none;
+            color: black;
+        }
+
+        #tlist a:hover {
+            background-color: rgb(115, 245, 245);
+        }
+
+        #tlist .selected {
+            background-color: rgb(175, 175, 255);
+            font-weight: bold;
+        }
+
+        #tpage {
+            border-left: 0px;
+            flex: 5;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <div id="tlist"></div>
+        <iframe id="tpage" name="tpage"></iframe>
+    </main>
+    <script src="/main.js"></script>
+</body>
+
+</html>

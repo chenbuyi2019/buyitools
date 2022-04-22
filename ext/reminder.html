@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <style>
+        body {
+            margin: 0px;
+            padding: 0px;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        section {
+            flex: 1;
+            padding: 10px;
+        }
+
+        h1 {
+            margin: 0px;
+            padding: 0px;
+            display: inline-block;
+        }
+
+        textarea {
+            margin-top: 10px;
+            resize: none;
+            display: block;
+            width: 90%;
+            height: 85%;
+        }
+
+        button {
+            font-family: inherit;
+            margin-left: 15px;
+        }
+
+        #divRecentEvents div {
+            border: 2px dashed black;
+            margin-top: 15px;
+            padding: 3px;
+        }
+
+        #divRecentEvents h2 {
+            margin: 0px;
+            font-size: larger;
+        }
+
+        #divRecentEvents p {
+            margin: 0px 0px 4px 0px;
+        }
+    </style>
+</head>
+
+<body>
+    <section>
+        <h1>日程数据：</h1>
+        <button id="butUpdateEvents">保存</button>
+        <textarea wrap="off" id='txtEventList'></textarea>
+    </section>
+    <section>
+        <h1>最近日程：</h1>
+        <button id="butForgetOldMarks">清除已读历史</button>
+        <div id="divRecentEvents"></div>
+    </section>
+    <script src="/calendar.js"></script>
+    <script src="/main.js"></script>
+</body>
+
+</html>

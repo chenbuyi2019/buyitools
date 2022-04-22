@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <style>
+        body {
+            padding: 0px;
+            margin: 0px;
+            font-size: large;
+            display: flex;
+        }
+
+        button {
+            font-size: inherit;
+        }
+
+        section {
+            margin: 10px;
+            padding: 10px;
+            border: 2px dashed black;
+            flex: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <section>
+        <button id="butExportData">导出全部数据</button>
+        <br>
+        <div id="divInfo"></div>
+    </section>
+    <section>
+        导入数据：<br>
+        <input type="file" id="inputFile" accept=".json"><br>
+        注意：导入会删除全部已有的数据。
+    </section>
+    <script src="/main.js"></script>
+</body>
+
+</html>
