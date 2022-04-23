@@ -192,7 +192,7 @@ async function getNeedNoticeEvents(events: Array<CalendarEvent>): Promise<Array<
         out.push(e)
     }
     if (needNotice) {
-        SetLocalValue(reminderNextNoticeTime, nowUnixTime + 1000 * 30)
+        SetLocalValue(reminderNextNoticeTime, nowUnixTime + 1000 * 90)
     }
     return out
 }
@@ -228,6 +228,7 @@ if (location.pathname == "/reminder.html") {
         today.setHours(0, 0, 0, 0)
         const todayUnixTime = today.getTime()
         let events = parseReminderText(txt)
+        await SetLocalValue(reminderNextNoticeTime, null)
         events = await getNeedNoticeEvents(events)
         divRecentEvents.innerText = ''
         let lastdiv: HTMLDivElement = divRecentEvents
