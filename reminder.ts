@@ -22,8 +22,15 @@ function parseReminderText(txt: string): Array<CalendarEvent> {
     const newCalendarEvent = function (title: string, year: number, month: number, day: number, useChineseCalendar: boolean): CalendarEvent {
         let dt = new Date(0)
         if (useChineseCalendar) {
-            let v = calendar.lunar2solar(year, month, day, false)
-            if (v == -1) {
+            const zhc: ZhCalendarDateValue = {
+                Year: year,
+                Month: month,
+                Day: day,
+                IsLeapMonth: false,
+                Date: null
+            }
+            let v = GetDateFromZhCalendarDate(zhc)
+            if (v == null) {
                 day += 1
                 if (day > 30) {
                     day = 1
@@ -33,13 +40,13 @@ function parseReminderText(txt: string): Array<CalendarEvent> {
                     year += 1
                     month = 1
                 }
-                v = calendar.lunar2solar(year, month, 1, false)
+                v = GetDateFromZhCalendarDate(zhc)
             }
-            if (v == -1) {
+            if (v == null) {
                 throw `无法识别的农历日期 ${year}年 ${month}月 ${day}日`
             }
-            dt.setFullYear(v.cYear, v.cMonth - 1, v.cDay)
-            title = `${title}(${v.IMonthCn}${v.IDayCn})`
+            dt = v
+            title = `${title}(${GetZhMonthName(month)}${GetZhDayName(day)})`
         } else {
             dt.setFullYear(year, month - 1, day)
         }

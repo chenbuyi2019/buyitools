@@ -15,7 +15,6 @@
     },
     "background": {
         "scripts": [
-            "calendar.js",
             "main.js"
         ]
     },

@@ -6,3 +6,4 @@ package-lock.json
 .debugTemp
 *.zip
 *.7z
+web-ext-artifacts

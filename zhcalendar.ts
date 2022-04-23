@@ -21,6 +21,42 @@ function GetDateFromZhCalendarDate(zh: ZhCalendarDateValue): Date | null {
     return v.Date
 }
 
+// 获取农历月份的汉语名字
+function GetZhMonthName(m: number): string {
+    m = Math.round(m)
+    if (isNaN(m) || m < 1 || m > 12) { return '' }
+    let f = ""
+    if (m < 11) {
+        f = '正二三四五六七八九十'.charAt(m - 1)
+    } else if (m == 11) {
+        f = '十一'
+    } else if (m == 12) {
+        f = '十二'
+    }
+    return f + '月'
+}
+
+// 获取农历日子的汉语名字
+function GetZhDayName(d: number): string {
+    d = Math.round(d)
+    if (isNaN(d) || d < 1 || d > 30) { return '' }
+    switch (d) {
+        case 30:
+            return '三十'
+        case 20:
+            return '二十'
+    }
+    let f = '初'
+    if (d > 20) {
+        f = '廿'
+        d -= 20
+    } else if (d > 10) {
+        f = '十'
+        d -= 10
+    }
+    return f + '一二三四五六七八九十'.charAt(d - 1)
+}
+
 interface ZhCalendarDateValue {
     Year: number,
     Month: number,
