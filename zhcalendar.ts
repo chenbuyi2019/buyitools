@@ -181,3 +181,44 @@ const zhCalendarData = {
         return null
     }
 }
+
+interface xf {
+    Number: number,
+    Text: string,
+    Waste: string,
+    Date: string
+}
+
+interface MoneyEvent {
+    Number: number,
+    Text: string,
+    Waste: boolean
+}
+
+async function ppp(s: string) {
+    const array: Array<xf> = JSON.parse(s)
+    array.sort(function (a, b): number {
+        return a.Date.localeCompare(b.Date)
+    })
+    let lastDate = ''
+
+    const accountdays: string = "accountdays"
+    const dates: string[] = []
+    const events: Array<MoneyEvent> = []
+    for (const e of array) {
+        if (lastDate != e.Date) {
+            if (events.length > 0) {
+                const storagett = accountdays + lastDate
+                console.log("add", lastDate, events)
+                await SetLocalValue(storagett, events)
+                dates.push(lastDate)
+                events.splice(0, events.length)
+            }
+            lastDate = e.Date
+        }
+        events.push({
+            Number: e.Number, Waste: e.Waste.trim().length > 0, Text: e.Text
+        })
+    }
+    await SetLocalValue(accountdays, dates)
+}

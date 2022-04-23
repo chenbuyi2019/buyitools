@@ -22,7 +22,7 @@ if (location.pathname == "/accountbook.html") {
             alert("此日期已经存在记录，请直接去修改那一天的记录。")
             return
         }
-        addDayDetailDiv(dt, [])
+        addDayDetailDiv(dt, [], false)
     })
 
     const accountdays: string = "accountdays"
@@ -33,7 +33,7 @@ if (location.pathname == "/accountbook.html") {
         return 0
     }
 
-    function addDayDetailDiv(dt: Date, events: MoneyEvent[]) {
+    function addDayDetailDiv(dt: Date, events: MoneyEvent[], addtoEnd: boolean) {
         const div = document.createElement('div')
         const time = document.createElement('time')
         const dtstr = ToDateString(dt)
@@ -138,7 +138,11 @@ if (location.pathname == "/accountbook.html") {
                 refreshEditor()
             }
         })
-        detaillist.insertBefore(div, detaillist.firstChild)
+        if (addtoEnd) {
+            detaillist.appendChild(div)
+        } else {
+            detaillist.insertBefore(div, detaillist.firstChild)
+        }
     }
 
     const statResult = document.getElementById('statResult') as HTMLDivElement
@@ -146,17 +150,30 @@ if (location.pathname == "/accountbook.html") {
     const inputStartDate = document.getElementById('inputStartDate') as HTMLInputElement
     const inputEndDate = document.getElementById('inputEndDate') as HTMLInputElement
 
-    (async function () {
+    async function displayDatesDetails(endDate: string) {
+        detaillist.innerText = ''
         const days: string[] = await GetLocalValue(accountdays, [])
         days.sort(function (a, b) {
-            return a.localeCompare(b)
+            return -a.localeCompare(b)
         })
-        for (let index = 0; index < Math.min(20, days.length); index++) {
+        const maxshown = 20
+        let shown = 0
+        for (let index = 0; index < days.length; index++) {
             const dtstr = days[index]
-            const events = await GetLocalValue(accountdays + dtstr)
-            addDayDetailDiv(new Date(dtstr), events)
+            if (dtstr <= endDate) {
+                const events = await GetLocalValue(accountdays + dtstr)
+                addDayDetailDiv(new Date(dtstr), events, true)
+                shown += 1
+                if (shown >= maxshown) {
+                    return
+                }
+            }
         }
+    }
+
+    (async function () {
         const today = new Date()
+        displayDatesDetails(ToDateString(today))
         inputEndDate.valueAsDate = today
         today.setDate(today.getDate() - 3)
         inputStartDate.valueAsDate = today
@@ -244,7 +261,8 @@ if (location.pathname == "/accountbook.html") {
                 tr.appendChild(d2)
                 table.appendChild(tr)
             }
-            addLine("统计范围", `${ToDateString(new Date(mindate))}\n${maxdate != mindate ? ToDateString(new Date(maxdate)) : ""}`)
+            const endDtstr = ToDateString(new Date(maxdate))
+            addLine("统计范围", `${ToDateString(new Date(mindate))}\n${maxdate != mindate ? endDtstr : ""}`)
             addLine("有记录的天数", countdays.toFixed(0))
             addLine("总收入", sumearn.toFixed(2))
             addLine("总开支", sumspend.toFixed(2))
@@ -280,6 +298,9 @@ if (location.pathname == "/accountbook.html") {
                 }
             }
             statResult.appendChild(table)
+            displayDatesDetails(endDtstr)
+            inputStartDate.valueAsDate = new Date(mindate)
+            inputEndDate.valueAsDate = new Date(maxdate)
         }
     })
 }

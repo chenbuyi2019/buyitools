@@ -59,6 +59,10 @@
             text-align: right;
         }
 
+        #detaillist label {
+            font-size: small;
+        }
+
         .moneyearn {
             background-color: #98e898;
         }
@@ -74,16 +78,27 @@
         #statspanel {
             flex: 2;
             padding: 7px;
+            display: grid;
+            grid-template-columns: auto;
+            grid-template-rows: 50px 100px auto;
+        }
+
+        #statResult {
+            overflow: scroll;
         }
 
         #statResult table {
+            table-layout: fixed;
             margin: 3px;
-            border: 1px solid black;
+            border-top: 1px solid black;
+            border-left: 1px solid black;
         }
 
         #statResult td {
             border-bottom: 1px solid black;
+            border-right: 1px solid black;
             text-align: right;
+            padding: 3px;
         }
     </style>
 </head>
@@ -96,7 +111,6 @@
             <input type="date" id="inputNewDay">
             <button id="butAddNewDay">新增一日</button>
         </div>
-        <br>
         <div>
             <div id="statbuttons">
                 <button title="35">近35天</button>
@@ -110,8 +124,8 @@
             <input type="date" id="inputEndDate">
             <button id="butDoStat">统计</button>
             <br>
-            <div id="statResult"></div>
         </div>
+        <div id="statResult"></div>
     </div>
     <script src="/main.js"></script>
 </body>
