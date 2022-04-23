@@ -14,7 +14,7 @@
 		{
 			"label": "web-ext",
 			"type": "shell",
-			"command": "web-ext build",
+			"command": "web-ext build --overwrite-dest",
 			"options": {
 				"cwd": "${workspaceFolder}/ext"
 			},
