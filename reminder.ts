@@ -1,4 +1,5 @@
 /// <reference path="global.ts" />
+/// <reference path="zhcalendar.ts" />
 
 interface CalendarEvent {
     DateStr: string

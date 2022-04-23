@@ -1,9 +1,9 @@
 test
-node_modules
 *.exe
-main.js
-package-lock.json
-.debugTemp
+*.js
 *.zip
 *.7z
+package-lock.json
+.debugTemp
 web-ext-artifacts
+node_modules
