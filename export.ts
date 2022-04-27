@@ -9,7 +9,7 @@ if (location.pathname == "/export.html") {
         const last = await GetLocalValue(lastExportTime, 0)
         if (last > 100) {
             const dt = new Date(last)
-            divInfo.innerText = `上次导出日期： ${ToDateZhString(dt)}`
+            divInfo.innerText = `上次导出日期： ${GetDateZhString(dt)}`
         } else {
             divInfo.innerText = "从来都没有导出过。"
         }
@@ -23,7 +23,7 @@ if (location.pathname == "/export.html") {
         const j = JSON.stringify(data)
         const a = document.createElement('a')
         a.href = `data:text/plain;charset=utf-8,${encodeURIComponent(j)}`
-        a.download = `${bigTitle}_${ToDateString(now)}.json`
+        a.download = `${bigTitle}_${GetDateString(now)}.json`
         a.click()
         a.remove()
         refreshDivInfo()

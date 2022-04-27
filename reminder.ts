@@ -1,6 +1,9 @@
 /// <reference path="global.ts" />
 /// <reference path="zhcalendar.ts" />
 
+const reminderMarks: string = "reminderMarks"
+const reminderText: string = "reminderText"
+
 interface CalendarEvent {
     DateStr: string
     Title: string
@@ -52,7 +55,7 @@ function parseReminderText(txt: string): Array<CalendarEvent> {
             dt.setFullYear(year, month - 1, day)
         }
         const e: CalendarEvent = {
-            DateStr: `${ToDateZhString(dt)} ${ToWeekdayZhString(dt)}`,
+            DateStr: `${GetDateZhString(dt)} ${GetWeekdayZhString(dt)}`,
             Title: title,
             UnixTime: dt.getTime(),
             Mark: `${dt.getTime().toFixed().padStart(14, '0')}${title.toLowerCase()}`
@@ -93,7 +96,7 @@ function parseReminderText(txt: string): Array<CalendarEvent> {
                     throw "标题重复使用了"
                 }
                 if (month > 0) {
-                    if (!IsGoodDate(month, day)) {
+                    if (!GetGoodDate(month, day)) {
                         throw "公历日期的日子不对劲"
                     }
                     let e = newCalendarEvent(title, thisYear, month, day, useChineseCalendar)
@@ -189,17 +192,19 @@ async function getNeedNoticeEvents(events: Array<CalendarEvent>): Promise<Array<
     const out: Array<CalendarEvent> = []
     const nextNotice: number = await GetLocalValue(reminderNextNoticeTime, 0)
     const needNotice = nowUnixTime > nextNotice
+    let sent = 0
     for (const e of events) {
         if (e.UnixTime > noticeEnds) { break }
         if (e.UnixTime < noticeStarts) { continue }
         const days = (e.UnixTime - todayUnixTime) / 24 / 60 / 60 / 1000
         if (days < 0 && olds.includes(e.Mark)) { continue }
         if (needNotice && !olds.includes(e.Mark) && days < 2) {
-            SendNotice(`日程提醒`, `${e.Title}\n${ToDayDiffZhString(days)}\n${e.DateStr}`)
+            SendNotice(`日程提醒`, `${e.Title}\n${GetDayDiffZhString(days)}\n${e.DateStr}`)
+            sent += 1
         }
         out.push(e)
     }
-    if (needNotice) {
+    if (needNotice && sent > 0) {
         SetLocalValue(reminderNextNoticeTime, nowUnixTime + 1000 * 90)
     }
     return out
@@ -249,9 +254,9 @@ if (location.pathname == "/reminder.html") {
                 divRecentEvents.appendChild(lastdiv)
                 const h2 = document.createElement("h2")
                 const days = (e.UnixTime - todayUnixTime) / 24 / 60 / 60 / 1000
-                lastDateTitle = ToDayDiffZhString(days)
+                lastDateTitle = GetDayDiffZhString(days)
                 if (lastDateTitle.length > 0) {
-                    h2.innerText = ToDayDiffZhString(days) + " " + e.DateStr
+                    h2.innerText = GetDayDiffZhString(days) + " " + e.DateStr
                 } else {
                     h2.innerText = e.DateStr
                 }

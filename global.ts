@@ -1,19 +1,22 @@
-
 const bigTitle = browser.runtime.getManifest().name
 
-function ToDateString(d: Date) {
+// 把 date 转换为 2010-01-29 的格式
+function GetDateString(d: Date) {
     return `${d.getFullYear()}-${(d.getMonth() + 1).toFixed().padStart(2, '0')}-${d.getDate().toFixed().padStart(2, '0')}`
 }
 
-function ToDateZhString(d: Date) {
+// 把 date 转换为 2010 年 01 月 29 日 的汉字格式
+function GetDateZhString(d: Date) {
     return `${d.getFullYear()} 年 ${(d.getMonth() + 1).toFixed().padStart(2, '0')} 月 ${d.getDate().toFixed().padStart(2, '0')} 日`
 }
 
-function ToWeekdayZhString(d: Date) {
+// 把 date 转换为 星期五 的汉字格式
+function GetWeekdayZhString(d: Date) {
     const s: string = "日一二三四五六"
     return `星期${s.charAt(d.getDay())}`
 }
 
+// 发送简单的推送消息
 async function SendNotice(title: string, text: string) {
     await browser.notifications.create({
         type: "basic",
@@ -47,7 +50,7 @@ async function GetLocalValue(key: string, defaultValue: any = null): Promise<any
 }
 
 // 判断这个公历月日是否合理
-function IsGoodDate(month: number, date: number): boolean {
+function GetGoodDate(month: number, date: number): boolean {
     const day31 = [1, 3, 5, 7, 8, 10, 12]
     if (day31.includes(month)) {
         return date <= 31
@@ -57,7 +60,8 @@ function IsGoodDate(month: number, date: number): boolean {
     return date <= 30
 }
 
-function ToDayDiffZhString(days: number): string {
+// 根据天数之差获取汉字表达形式
+function GetDayDiffZhString(days: number): string {
     if (days < 0) {
         return "过去"
     } else if (days < 1) {
@@ -68,37 +72,4 @@ function ToDayDiffZhString(days: number): string {
         return "后天"
     }
     return ''
-}
-
-const reminderMarks: string = "reminderMarks"
-const reminderText: string = "reminderText"
-
-if (location.pathname.includes("background")) {
-    const switchToIndex = async function () {
-        const tabs = await browser.tabs.query({ currentWindow: true, title: bigTitle })
-        for (const tab of tabs) {
-            const u = tab.url
-            const id = tab.id
-            if (u == null || id == null) {
-                continue
-            }
-            if (!u.startsWith('http') && u.endsWith("/index.html")) {
-                browser.tabs.update(id, { active: true })
-                return
-            }
-        }
-        browser.tabs.create({ url: "/index.html", active: true })
-    }
-
-    browser.browserAction.onClicked.addListener(switchToIndex)
-
-    browser.notifications.onClicked.addListener(switchToIndex)
-
-    const checkReminder = async function () {
-        const txt: string = await GetLocalValue(reminderText, '')
-        const evs = parseReminderText(txt)
-        await getNeedNoticeEvents(evs)
-    }
-    setInterval(checkReminder, 1000 * 60 * 60 * 6)
-    checkReminder()
 }

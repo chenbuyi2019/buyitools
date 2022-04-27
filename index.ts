@@ -23,6 +23,7 @@ if (location.pathname == "/index.html") {
             lastSelected = a
         })
     }
+    addTool("资产", "money")
     addTool("记账", "accountbook")
     addTool("日程", "reminder")
     addTool("数据导入导出", "export")

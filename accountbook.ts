@@ -18,11 +18,11 @@ if (location.pathname == "/accountbook.html") {
             return
         }
         const days: string[] = await GetLocalValue(accountdays, [])
-        if (days.includes(ToDateString(dt))) {
+        if (days.includes(GetDateString(dt))) {
             alert("此日期已经存在记录，请直接去修改那一天的记录。")
             return
         }
-        addDayDetailDiv(dt, [], false)
+        addDayDetailDiv(dt, false)
     })
 
     const accountdays: string = "accountdays"
@@ -33,111 +33,36 @@ if (location.pathname == "/accountbook.html") {
         return 0
     }
 
-    function addDayDetailDiv(dt: Date, events: MoneyEvent[], addtoEnd: boolean) {
+    function addDayDetailDiv(dt: Date, addtoEnd: boolean) {
         const div = document.createElement('div')
         const time = document.createElement('time')
-        const dtstr = ToDateString(dt)
+        const dtstr = GetDateString(dt)
         time.dateTime = dtstr
-        time.innerText = ToDateZhString(dt) + "\n" + ToWeekdayZhString(dt)
+        time.innerText = `${GetDateZhString(dt)}\n${GetWeekdayZhString(dt)}`
+        div.className = 'DayDetail'
         div.appendChild(time)
-        const ul = document.createElement('ul')
-        div.appendChild(ul)
-        const editor = document.createElement('textarea')
-        div.appendChild(editor)
-        const butSave = document.createElement('button')
-        butSave.style.display = 'block'
-        time.appendChild(butSave)
-        async function refreshEvents() {
-            const storagett = accountdays + dtstr
-            if (events.length < 1) {
-                await SetLocalValue(storagett, null)
-                let days: string[] = await GetLocalValue(accountdays, [])
-                let index = days.indexOf(dtstr)
+        const e = new MoneyBoxElement(accountdays + GetDateString(dt))
+        e.OnDataUpdated = async function (key, value) {
+            const k = key.replaceAll(accountdays, '')
+            const days: string[] = await GetLocalValue(accountdays, [])
+            let changed = false
+            if (value.length > 0) {
+                if (days.includes(k) == false) {
+                    days.push(k)
+                    changed = true
+                }
+            } else {
+                const index = days.indexOf(k)
                 if (index >= 0) {
                     days.splice(index, 1)
+                    changed = true
                 }
+            }
+            if (changed) {
                 await SetLocalValue(accountdays, days)
-                div.remove()
-            } else {
-                events.sort(SortMoneyEvents)
-                await SetLocalValue(storagett, events)
-                let days: string[] = await GetLocalValue(accountdays, [])
-                if (!days.includes(dtstr)) {
-                    days.push(dtstr)
-                }
-                await SetLocalValue(accountdays, days)
-                for (const e of events) {
-                    const li = document.createElement('li')
-                    const num = document.createElement('span')
-                    num.innerText = e.Number.toFixed(2)
-                    if (e.Number > 0) {
-                        num.className = 'moneyearn'
-                    } else if (e.Waste) {
-                        num.className = 'moneywaste'
-                    } else {
-                        num.className = 'moneyspend'
-                    }
-                    const label = document.createElement('label')
-                    label.innerText = e.Text
-                    li.appendChild(num)
-                    li.appendChild(label)
-                    ul.appendChild(li)
-                }
-                editor.value = ''
-                ul.style.display = 'block'
-                butSave.innerText = "编辑"
-                editor.style.display = 'none'
             }
         }
-        function refreshEditor() {
-            editor.style.display = 'block'
-            ul.style.display = 'none'
-            butSave.innerText = "保存"
-            let out = ''
-            for (const e of events) {
-                out += `${e.Number.toFixed(2)}${e.Waste ? 'w' : ''}  ${e.Text}\n`
-            }
-            editor.value = out
-        }
-        if (events.length > 0) {
-            refreshEvents()
-        } else {
-            refreshEditor()
-        }
-        butSave.addEventListener('click', function () {
-            if (editor.style.display != 'none') {
-                const lines = editor.value.split(/[\n\r]+/gim)
-                const regEventLine = /([-\.0-9]+)(w?)\s+(.+)/i
-                ul.innerText = ''
-                events.splice(0, events.length)
-                for (const line of lines) {
-                    const r = regEventLine.exec(line.normalize().trim())
-                    if (r == null) {
-                        continue
-                    }
-                    const num = parseFloat(parseFloat(r[1]).toFixed(2))
-                    if (num > 99999 || num < -99999) {
-                        alert(`你哪里来这么多钱，本软件不合适你\n${num}`)
-                        return
-                    }
-                    const waste = num < 0 && r[2] != null && r[2].length > 0
-                    const tt = r[3]
-                    if (tt.length < 1 || tt.length > 20) {
-                        alert(`记录过长或为空：\n${num} ${tt}`)
-                        return
-                    }
-                    const e: MoneyEvent = {
-                        Waste: waste,
-                        Number: num,
-                        Text: tt
-                    }
-                    events.push(e)
-                }
-                refreshEvents()
-            } else {
-                refreshEditor()
-            }
-        })
+        div.appendChild(e.BoxElement)
         if (addtoEnd) {
             detaillist.appendChild(div)
         } else {
@@ -161,8 +86,7 @@ if (location.pathname == "/accountbook.html") {
         for (let index = 0; index < days.length; index++) {
             const dtstr = days[index]
             if (dtstr <= endDate) {
-                const events = await GetLocalValue(accountdays + dtstr)
-                addDayDetailDiv(new Date(dtstr), events, true)
+                addDayDetailDiv(new Date(dtstr), true)
                 shown += 1
                 if (shown >= maxshown) {
                     return
@@ -173,7 +97,7 @@ if (location.pathname == "/accountbook.html") {
 
     (async function () {
         const today = new Date()
-        displayDatesDetails(ToDateString(today))
+        displayDatesDetails(GetDateString(today))
         inputEndDate.valueAsDate = today
         today.setDate(today.getDate() - 3)
         inputStartDate.valueAsDate = today
@@ -219,7 +143,7 @@ if (location.pathname == "/accountbook.html") {
             if (dstart > ms || ms > dend) {
                 continue
             }
-            const events: MoneyEvent[] = await GetLocalValue(accountdays + ToDateString(dt), [])
+            const events: MoneyEvent[] = await GetLocalValue(accountdays + GetDateString(dt), [])
             if (events.length < 1) {
                 continue
             }
@@ -261,8 +185,8 @@ if (location.pathname == "/accountbook.html") {
                 tr.appendChild(d2)
                 table.appendChild(tr)
             }
-            const endDtstr = ToDateString(new Date(maxdate))
-            addLine("统计范围", `${ToDateString(new Date(mindate))}\n${maxdate != mindate ? endDtstr : ""}`)
+            const endDtstr = GetDateString(new Date(maxdate))
+            addLine("统计范围", `${GetDateString(new Date(mindate))}\n${maxdate != mindate ? endDtstr : ""}`)
             addLine("有记录的天数", countdays.toFixed(0))
             addLine("总收入", sumearn.toFixed(2))
             addLine("总开支", sumspend.toFixed(2))
