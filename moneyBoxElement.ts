@@ -9,7 +9,7 @@ const zhEdit = '编辑'
 const zhSave = '保存'
 
 class MoneyBoxElement {
-    constructor(dataKey: string) {
+    constructor(dataKey: string, startEditIfEmpty: boolean = true) {
         this.EditButton.style.display = 'block'
         this.EditButton.innerText = zhEdit
         this.EditButton.style.marginTop = '6px'
@@ -29,10 +29,15 @@ class MoneyBoxElement {
                 const lines = me.Editor.value.split(/[\n\r]+/gim)
                 const regEventLine = /([-\.0-9]+)(w?)\s+(.+)/i
                 me.Events.splice(0, me.Events.length)
-                for (const line of lines) {
-                    const r = regEventLine.exec(line.normalize().trim())
-                    if (r == null) {
+                for (const rawline of lines) {
+                    const line = rawline.normalize().trim()
+                    if (line.length < 1) {
                         continue
+                    }
+                    const r = regEventLine.exec(line)
+                    if (r == null) {
+                        alert(`不符合格式的一行：\n${line}`)
+                        return
                     }
                     const num = parseFloat(parseFloat(r[1]).toFixed(2))
                     const waste = num < 0 && r[2] != null && r[2].length > 0
@@ -66,6 +71,8 @@ class MoneyBoxElement {
                         me.Events.push(e)
                     }
                     me.RefreshEventsUI()
+                } else if (startEditIfEmpty) {
+                    me.StartEdit()
                 }
             }
         })()

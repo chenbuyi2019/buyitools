@@ -12,7 +12,7 @@ if (location.pathname == "/money.html") {
         const h2 = document.createElement('h2')
         h2.innerText = title
         div.appendChild(h2)
-        const e = new MoneyBoxElement(`money${title}`)
+        const e = new MoneyBoxElement(`money${title}`, false)
         e.OnDataUpdated = function (key, array) {
             let sum = 0
             for (const e of array) {
