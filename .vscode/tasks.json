@@ -12,7 +12,7 @@
 			"group": "build"
 		},
 		{
-			"label": "web-ext",
+			"label": "web-ext build",
 			"type": "shell",
 			"command": "web-ext build --overwrite-dest",
 			"options": {
