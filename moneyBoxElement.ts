@@ -5,13 +5,10 @@ interface MoneyEvent {
     Waste: boolean
 }
 
-const zhEdit = '编辑'
-const zhSave = '保存'
-
 class MoneyBoxElement {
     constructor(dataKey: string, startEditIfEmpty: boolean = true) {
         this.EditButton.style.display = 'block'
-        this.EditButton.innerText = zhEdit
+        this.EditButton.innerText = '编辑'
         this.EditButton.style.marginTop = '6px'
         this.Editor.style.width = '95%'
         this.Editor.style.resize = 'none'
@@ -126,12 +123,12 @@ class MoneyBoxElement {
             }
         }
         this.Editor.style.display = 'none'
-        this.EditButton.innerText = zhEdit
+        this.EditButton.innerText = '编辑'
     }
     StartEdit() {
         this.ClearUI()
         this.Editor.style.display = 'block'
-        this.EditButton.innerText = zhSave
+        this.EditButton.innerText = '保存'
         let out = ''
         for (const e of this.Events) {
             out += `${e.Number.toFixed(2)}${e.Waste ? "w" : ""} ${e.Text}\n`

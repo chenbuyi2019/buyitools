@@ -9,63 +9,77 @@
         body {
             margin: 0px;
             padding: 0px;
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
+            font-size: large;
         }
 
-        section {
-            flex: 1;
-            padding: 10px;
+        main {
+            margin: 0px auto;
+            max-width: 500px;
         }
 
-        h1 {
-            margin: 0px;
-            padding: 0px;
-            display: inline-block;
+        #notices {
+            padding: 5px;
+            border: 2px solid black;
+            border-radius: 3px;
+            margin: 15px 0px;
         }
 
-        textarea {
-            margin-top: 10px;
-            resize: none;
+        #notices time {
             display: block;
-            width: 90%;
-            height: 85%;
-        }
-
-        button {
-            font-family: inherit;
-            margin-left: 15px;
-        }
-
-        #divRecentEvents div {
-            border: 2px dashed black;
-            margin-top: 15px;
-            padding: 3px;
-        }
-
-        #divRecentEvents h2 {
-            margin: 0px;
+            margin-bottom: 3px;
             font-size: larger;
+            font-weight: bold;
         }
 
-        #divRecentEvents p {
-            margin: 0px 0px 4px 0px;
+        #notices hr {
+            display: block;
+            border: none;
+            border-top: 2px dashed black;
+        }
+
+        #notices label {
+            cursor: pointer;
+        }
+
+        #groups div {
+            padding: 5px;
+            margin-top: 15px;
+            border: 2px solid black;
+            border-radius: 3px;
+        }
+
+        #groups h2,
+        #groups p,
+        #groups textarea {
+            margin: 3px 0px;
+        }
+
+        #groups p {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid black;
+            font-size: small;
+        }
+
+        #groups textarea {
+            width: 95%;
+            height: 200px;
+            resize: none;
         }
     </style>
 </head>
 
 <body>
-    <section>
-        <h1>日程数据：</h1>
-        <button id="butUpdateEvents">保存</button>
-        <textarea wrap="off" id='txtEventList'></textarea>
-    </section>
-    <section>
-        <h1>最近日程：</h1>
-        <button id="butForgetOldMarks">清除已读历史</button>
-        <div id="divRecentEvents"></div>
-    </section>
+    <main>
+        <div id="notices">
+        </div>
+        <div>
+            <button id="butNewGroup">新增分组</button>
+            <button id="butClearCheckedMarks">清除已读记录</button>
+        </div>
+        <div id="groups">
+        </div>
+    </main>
     <script src="/main.js"></script>
 </body>
 

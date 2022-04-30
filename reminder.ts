@@ -1,292 +1,497 @@
 /// <reference path="global.ts" />
 /// <reference path="zhcalendar.ts" />
 
-const reminderMarks: string = "reminderMarks"
-const reminderText: string = "reminderText"
+(function () {
 
-interface CalendarEvent {
-    DateStr: string
-    Title: string
-    UnixTime: number
-    Mark: string
-}
+    const isReminderPage: boolean = location.pathname == "/reminder.html"
+    if (!isReminderPage && !isBackground) { return }
+    const reminderGroup: string = 'reminderg'
+    const checkdMarks: string = 'checkdMarks'
 
-function parseReminderText(txt: string): Array<CalendarEvent> {
-    const regDateEvent = /^([0-9]{1,2})-([0-9]{1,2})(n)? +(.+)$/i
-    const regIntervalEvent = /^20([0-9]{2})([0-9]{2})([0-9]{2})-([0-9]{1,3}) +(.+)$/i
-    const regNumberStart = /^[0-9]/
-    const lines = txt.trim().normalize().replaceAll("\r", "\n").split("\n")
-    const events: Array<CalendarEvent> = []
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const todayUnixTime = today.getTime()
-    const thisYear = today.getFullYear()
-    const thisMonth = today.getMonth() + 1
-    const usedTitles: Array<string> = []
-    const newCalendarEvent = function (title: string, year: number, month: number, day: number, useChineseCalendar: boolean): CalendarEvent {
-        let dt = new Date(0)
-        if (useChineseCalendar) {
-            const zhc: ZhCalendarDateValue = {
-                Year: year,
-                Month: month,
-                Day: day,
-                IsLeapMonth: false,
-                Date: null
-            }
-            let v = GetDateFromZhCalendarDate(zhc)
-            if (v == null) {
-                day += 1
-                if (day > 30) {
-                    day = 1
-                    month += 1
-                }
-                if (month > 12) {
-                    year += 1
-                    month = 1
-                }
-                v = GetDateFromZhCalendarDate(zhc)
-            }
-            if (v == null) {
-                throw `无法识别的农历日期 ${year}年 ${month}月 ${day}日`
-            }
-            dt = v
-            title = `${title}(${GetZhMonthName(month)}${GetZhDayName(day)})`
-        } else {
-            dt.setFullYear(year, month - 1, day)
-        }
-        const e: CalendarEvent = {
-            DateStr: `${GetDateZhString(dt)} ${GetWeekdayZhString(dt)}`,
-            Title: title,
-            UnixTime: dt.getTime(),
-            Mark: `${dt.getTime().toFixed().padStart(14, '0')}${title.toLowerCase()}`
-        }
-        return e
+    interface Events {
+        YearlyEvents: Array<YearlyEvent>,
+        IntervalEvents: Array<IntervalEvent>
     }
-    for (let index = 0; index < lines.length; index++) {
-        let line = lines[index].normalize().trim()
-        if (line.length < 1 || !regNumberStart.test(line)) {
-            continue
-        }
-        try {
-            let results = regDateEvent.exec(line)
-            if (results != null) {
-                let month = parseInt(results[1])
-                if (month > 12) {
-                    throw "月份不能大于12"
-                }
-                let day = parseInt(results[2])
-                if (day < 1 || day > 31) {
-                    throw "日子不能为0或者大于31"
-                }
-                let useChineseCalendar = results[3] != null
-                if (useChineseCalendar) {
-                    if (day > 30) {
-                        throw "农历日子不能大于30日"
-                    }
-                    if (month < 1) {
-                        throw "我不打算支持农历每月提醒"
-                    }
-                }
-                const title = results[4].trim()
-                const ltitle = title.toLowerCase()
-                if (title.length < 1 || title.length > 30) {
-                    throw "事件标题不能为空白或者超过30个字符"
-                }
-                if (usedTitles.includes(ltitle)) {
-                    throw "标题重复使用了"
-                }
-                if (month > 0) {
-                    if (!GetGoodDate(month, day)) {
-                        throw "公历日期的日子不对劲"
-                    }
-                    let e = newCalendarEvent(title, thisYear, month, day, useChineseCalendar)
-                    events.push(e)
-                    e = newCalendarEvent(title, thisYear + 1, month, day, useChineseCalendar)
-                    events.push(e)
-                } else {
-                    let e = newCalendarEvent(title, thisYear, thisMonth, day, useChineseCalendar)
-                    events.push(e)
-                    let m = thisMonth + 1
-                    let y = thisYear
-                    if (m > 12) {
-                        m = 1
-                        y += 1
-                    }
-                    e = newCalendarEvent(title, y, m, day, useChineseCalendar)
-                    events.push(e)
-                }
-                usedTitles.push(ltitle)
-                continue
-            }
-            results = regIntervalEvent.exec(line)
-            if (results != null) {
-                let year = 2000 + parseInt(results[1])
-                if (year < thisYear - 1 || year > thisYear + 1) {
-                    throw "年份不能在去年和明年之外"
-                }
-                let month = parseInt(results[2])
-                if (month > 12 || month < 1) {
-                    throw "月份不能为0或者大于12"
-                }
-                let day = parseInt(results[3])
-                if (day < 1 || day > 31) {
-                    throw "日子不能为0或者大于31"
-                }
-                let interval = parseInt(results[4])
-                if (interval < 1) {
-                    throw "天数间隔不能为0"
-                }
-                const title = results[5].trim()
-                const ltitle = title.toLowerCase()
-                if (title.length < 1 || title.length > 30) {
-                    throw "事件标题不能为空白或者超过30个字符"
-                }
-                if (usedTitles.includes(ltitle)) {
-                    throw "标题重复使用了"
-                }
-                let dt = new Date(0)
-                dt.setFullYear(year, month - 1, day)
+
+    interface YearlyEvent {
+        Month: number
+        Day: number
+        UseChineseCalendar: boolean
+        Title: string
+    }
+
+    interface IntervalEvent {
+        StartTimeMs: number
+        DayInterval: number
+        Title: string
+        MoveForward: boolean
+    }
+
+    interface OutputEvent {
+        GroupName: string
+        Title: string
+        Date: Date
+        DateStr: string
+    }
+
+    async function getGroupEvents(name: string): Promise<Events | null> {
+        const v: Events | null = await GetLocalValue(reminderGroup + name, null)
+        return v
+    }
+
+    function getOutputEventMarkStr(e: OutputEvent): string {
+        return `${e.Date.getTime()}${e.Title}${e.DateStr}${e.GroupName}`
+    }
+
+    async function getAllGroups(): Promise<Array<string>> {
+        const v: Array<string> = await GetLocalValue(reminderGroup, [])
+        return v
+    }
+
+    async function getCheckedMarks(): Promise<Array<string>> {
+        const v: Array<string> = await GetLocalValue(checkdMarks, [])
+        return v
+    }
+
+    async function getNotices(): Promise<Array<OutputEvent>> {
+        const groupNames = await getAllGroups()
+        const out: Array<OutputEvent> = []
+        const oneDay = 24 * 60 * 60 * 1000
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const todayMs = today.getTime()
+        const thisYear = today.getFullYear()
+        const noticeEnds = todayMs + 10 * oneDay
+        const noticeStarts = todayMs - 5 * oneDay
+        for (const groupname of groupNames) {
+            const evs = await getGroupEvents(groupname)
+            if (evs == null) { continue }
+            for (const e of evs.IntervalEvents) {
+                if (e.DayInterval < 1 || (e.MoveForward && e.StartTimeMs > noticeEnds) || (!e.MoveForward && e.StartTimeMs < noticeStarts)) { continue }
                 let added = 0
-                while (true) {
-                    dt.setDate(dt.getDate() + interval)
-                    if (dt.getTime() > todayUnixTime) {
-                        let e = newCalendarEvent(title, dt.getFullYear(), dt.getMonth() + 1, dt.getDate(), false)
-                        events.push(e)
-                        added += 1
-                        if (added >= 2) {
-                            break
-                        }
+                let times = e.MoveForward ? 4999 : 2
+                for (let t = 0; t < times; t++) {
+                    const dt = new Date(e.StartTimeMs + t * e.DayInterval * oneDay * (e.MoveForward ? 1 : -1))
+                    const ms = dt.getTime()
+                    if (e.MoveForward) {
+                        if (ms < noticeStarts) { continue }
+                        if (ms > noticeEnds) { break }
+                    } else {
+                        if (ms < noticeStarts) { break }
+                        if (ms > noticeEnds) { continue }
                     }
-                    if (dt.getFullYear() > 2050) {
+                    const oe: OutputEvent = {
+                        GroupName: groupname,
+                        Title: e.Title,
+                        Date: dt,
+                        DateStr: GetDateZhString(dt)
+                    }
+                    out.push(oe)
+                    added += 1
+                    if (added >= 2) {
                         break
                     }
                 }
-                usedTitles.push(ltitle)
-                continue
             }
-            throw "用数字开头却不满足任意表达式"
-        } catch (error) {
-            throw `第 ${index + 1} 行出错：${error}\n${line}`
+            for (const e of evs.YearlyEvents) {
+                if (e.UseChineseCalendar) {
+                    const nl: ZhCalendarDateValue = {
+                        Year: thisYear,
+                        Month: e.Month,
+                        Day: e.Day,
+                        IsLeapMonth: false,
+                        Date: null
+                    }
+                    let dt = GetDateFromZhCalendarDate(nl)
+                    if (dt == null) {
+                        if (nl.Day >= 30) {
+                            nl.IsLeapMonth = true
+                            dt = GetDateFromZhCalendarDate(nl)
+                            if (dt == null) {
+                                nl.IsLeapMonth = false
+                                nl.Day = 1
+                                nl.Month += 1
+                                if (nl.Month > 12) {
+                                    nl.Month = 1
+                                    nl.Year += 1
+                                }
+                                dt = GetDateFromZhCalendarDate(nl)
+                            }
+                        }
+                    }
+                    if (dt == null) {
+                        console.error(`无法定位的农历日期： ${groupname} `, e)
+                    } else {
+                        const ms = dt.getTime()
+                        if (ms >= noticeStarts && ms <= noticeEnds) {
+                            const oe: OutputEvent = {
+                                GroupName: groupname,
+                                Title: e.Title,
+                                Date: dt,
+                                DateStr: `${GetZhMonthName(nl.Month)}${GetZhDayName(nl.Day)}`
+                            }
+                            out.push(oe)
+                        }
+                    }
+                } else {
+                    const dt = new Date()
+                    dt.setHours(0, 0, 0, 0)
+                    dt.setMonth(e.Month - 1, e.Day)
+                    if (dt.getTime() < todayMs) {
+                        dt.setFullYear(thisYear + 1)
+                        dt.setMonth(e.Month - 1, e.Day)
+                    }
+                    const ms = dt.getTime()
+                    if (ms >= noticeStarts && ms <= noticeEnds) {
+                        const oe: OutputEvent = {
+                            GroupName: groupname,
+                            Title: e.Title,
+                            Date: dt,
+                            DateStr: GetDateZhString(dt)
+                        }
+                        out.push(oe)
+                    }
+                }
+            }
         }
-    }
-    events.sort(function (a, b) {
-        if (a.UnixTime > b.UnixTime) {
+        out.sort(function (a, b): number {
+            const at = a.Date.getTime()
+            const bt = b.Date.getTime()
+            if (at == bt) {
+                let n = a.GroupName.localeCompare(b.GroupName)
+                if (n == 0) { n = a.Title.localeCompare(b.Title) }
+                return n
+            }
+            if (at < bt) { return -1 }
             return 1
-        }
-        return -1
-    })
-    return events
-}
+        })
+        return out
+    }
 
-const reminderNextNoticeTime: string = "reminderNextNoticeTime"
-
-async function getNeedNoticeEvents(events: Array<CalendarEvent>): Promise<Array<CalendarEvent>> {
-    const today = new Date()
-    const nowUnixTime = today.getTime()
-    today.setHours(0, 0, 0, 0)
-    const todayUnixTime = today.getTime()
-    const oneDay = 1000 * 60 * 60 * 24
-    const noticeEnds = todayUnixTime + oneDay * 15
-    const noticeStarts = todayUnixTime - oneDay * 6
-    const olds = await GetLocalValue(reminderMarks, [])
-    const out: Array<CalendarEvent> = []
-    const nextNotice: number = await GetLocalValue(reminderNextNoticeTime, 0)
-    const needNotice = nowUnixTime > nextNotice
-    let sent = 0
-    for (const e of events) {
-        if (e.UnixTime > noticeEnds) { break }
-        if (e.UnixTime < noticeStarts) { continue }
-        const days = (e.UnixTime - todayUnixTime) / 24 / 60 / 60 / 1000
-        if (days < 0 && olds.includes(e.Mark)) { continue }
-        if (needNotice && !olds.includes(e.Mark) && days < 2) {
-            SendNotice(`日程提醒`, `${e.Title}\n${GetDayDiffZhString(days)}\n${e.DateStr}`)
+    async function sendDesktopNotices() {
+        const tt: string = 'ReminderNextSendTime'
+        const next = await GetLocalValue(tt, 0)
+        const now = (new Date).getTime()
+        if (next > now) { return }
+        const notices = await getNotices()
+        const checked = await getCheckedMarks()
+        let sent = 0
+        let timeLimit = 24 * 60 * 60 * 1000 * 3
+        for (const e of notices) {
+            const ms = e.Date.getTime()
+            if (Math.abs(ms - now) > timeLimit) { continue }
+            const mark = getOutputEventMarkStr(e)
+            if (checked.includes(mark)) { continue }
+            await SendNotice('日程提醒', `${e.Title}\n${e.GroupName}\n${e.DateStr}`)
             sent += 1
         }
-        out.push(e)
-    }
-    if (needNotice && sent > 0) {
-        SetLocalValue(reminderNextNoticeTime, nowUnixTime + 1000 * 90)
-    }
-    return out
-}
-
-if (location.pathname == "/reminder.html") {
-
-    const txtEventList = document.getElementById('txtEventList') as HTMLTextAreaElement
-    const butUpdateEvents = document.getElementById('butUpdateEvents') as HTMLButtonElement
-    const divRecentEvents = document.getElementById("divRecentEvents") as HTMLDivElement
-    const butForgetOldMarks = document.getElementById('butForgetOldMarks') as HTMLButtonElement
-
-    async function updateOldMarkInCheckBox(this: HTMLInputElement, ev: Event) {
-        let mark = this.title
-        if (mark.length < 1) { return }
-        let old = await GetLocalValue(reminderMarks, [])
-        if (this.checked) {
-            if (!old.includes(mark)) {
-                old.push(mark)
-                await SetLocalValue(reminderMarks, old)
-            }
-        } else {
-            let index = old.indexOf(mark)
-            if (index >= 0) {
-                old.splice(index, 1)
-                await SetLocalValue(reminderMarks, old)
-            }
+        if (sent > 0) {
+            await SetLocalValue(tt, now + 1000 * 15)
         }
     }
 
-    async function updateEvents() {
-        const txt = txtEventList.value.trim()
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
-        const todayUnixTime = today.getTime()
-        let events = parseReminderText(txt)
-        await SetLocalValue(reminderNextNoticeTime, null)
-        events = await getNeedNoticeEvents(events)
-        divRecentEvents.innerText = ''
-        let lastdiv: HTMLDivElement = divRecentEvents
-        let lastTime = -0.5
-        let lastDateTitle = ""
-        const olds = await GetLocalValue(reminderMarks, [])
-        for (const e of events) {
-            if (e.UnixTime != lastTime) {
-                lastdiv = document.createElement('div')
-                divRecentEvents.appendChild(lastdiv)
-                const h2 = document.createElement("h2")
-                const days = (e.UnixTime - todayUnixTime) / 24 / 60 / 60 / 1000
-                lastDateTitle = GetDayDiffZhString(days)
-                if (lastDateTitle.length > 0) {
-                    h2.innerText = GetDayDiffZhString(days) + " " + e.DateStr
+    if (isReminderPage) {
+        const regYearlyEvent = /^([0-9]{1,2})-([0-9]{1,2})(n)? +(.+)$/i
+        const regIntervalEvent = /^20([0-9]{2})([0-9]{2})([0-9]{2})([+-])([0-9]{1,3}) +(.+)$/i
+
+        function parseYearlyEvent(str: string): YearlyEvent | null {
+            let results = regYearlyEvent.exec(str)
+            if (results == null) { return null }
+            let month = parseInt(results[1])
+            if (month < 1 || month > 12) { throw "月份不能大于12或者小于1" }
+            let day = parseInt(results[2])
+            if (day < 1 || day > 31) { throw "日子不能为0或者大于31" }
+            let useChineseCalendar = results[3] != null
+            if (useChineseCalendar) {
+                if (day > 30) { throw "农历日子不能大于30日" }
+            } else {
+                if (month > 0 && !IsGoodDate(month, day)) { throw "公历日期不对劲" }
+            }
+            const title = results[4].trim()
+            if (title.length < 1 || title.length > 30) { throw "事件标题不能为空白或者超过30个字符" }
+            const n: YearlyEvent = {
+                Month: month,
+                Day: day,
+                UseChineseCalendar: useChineseCalendar,
+                Title: title
+            }
+            return n
+        }
+
+        function parseIntervalEvent(str: string): IntervalEvent | null {
+            const results = regIntervalEvent.exec(str)
+            if (results == null) { return null }
+            const year = 2000 + parseInt(results[1])
+            if (year < 2020 || year > 2025) { throw "年份太遥远" }
+            const month = parseInt(results[2])
+            const day = parseInt(results[3])
+            const moveForward = results[4] == '+'
+            const dt = new Date(`${year}-${month}-${day} 00:00:00.000`)
+            if (isNaN(dt.getFullYear())) { throw `开始的公历日期不存在` }
+            const interval = parseInt(results[5])
+            if (interval < 1) { throw "天数间隔不能为0" }
+            const title = results[6].trim()
+            if (title.length < 1 || title.length > 30) { throw "事件标题不能为空白或者超过30个字符" }
+            const n: IntervalEvent = {
+                StartTimeMs: dt.getTime(),
+                DayInterval: interval,
+                Title: title,
+                MoveForward: moveForward
+            }
+            return n
+        }
+
+        const divNotices = document.getElementById('notices') as HTMLDivElement
+        const divGroups = document.getElementById('groups') as HTMLDivElement
+        const butNewGroup = document.getElementById('butNewGroup') as HTMLButtonElement
+        const butClearCheckedMarks = document.getElementById('butClearCheckedMarks') as HTMLButtonElement
+
+        (async function () {
+            const groupNames = await getAllGroups()
+            for (const name of groupNames) {
+                addGroupUI(name)
+            }
+            butNewGroup.addEventListener('click', function () {
+                addGroupUI('')
+            })
+            butClearCheckedMarks.title = butClearCheckedMarks.innerText
+            butClearCheckedMarks.addEventListener('click', async function () {
+                await SetLocalValue(checkdMarks, null)
+                location.reload()
+            })
+            await refreshNoticesUI()
+        })()
+
+        async function refreshNoticesUI() {
+            divNotices.innerText = ''
+            const notices = await getNotices()
+            const refreshClearButton = function (len: number) {
+                if (len > 0) {
+                    butClearCheckedMarks.innerText = `${butClearCheckedMarks.title} (${len})`
                 } else {
-                    h2.innerText = e.DateStr
+                    butClearCheckedMarks.innerText = butClearCheckedMarks.title
                 }
-                lastdiv.appendChild(h2)
-                lastTime = e.UnixTime
             }
-            const p = document.createElement("p")
-            const input = document.createElement("input")
-            input.type = "checkbox"
-            input.title = e.Mark
-            input.addEventListener('input', updateOldMarkInCheckBox)
-            input.checked = olds.includes(e.Mark)
-            p.appendChild(input)
-            const label = document.createElement("label")
-            label.innerText = e.Title
-            p.appendChild(label)
-            lastdiv.appendChild(p)
+            const onChange = async function (mark: string, add: boolean) {
+                if (mark.length < 1) { return }
+                const checked = await getCheckedMarks()
+                let edited = false
+                if (add) {
+                    if (!checked.includes(mark)) {
+                        checked.push(mark)
+                        edited = true
+                    }
+                } else {
+                    const index = checked.indexOf(mark)
+                    if (index >= 0) {
+                        checked.splice(index, 1)
+                        edited = true
+                    }
+                }
+                if (edited) {
+                    await SetLocalValue(checkdMarks, checked)
+                    refreshClearButton(checked.length)
+                }
+            }
+            let lastDate = 1.5
+            const checked = await getCheckedMarks()
+            const today = new Date
+            today.setHours(0, 0, 0, 0)
+            const now = today.getTime()
+            for (const e of notices) {
+                const mark = getOutputEventMarkStr(e)
+                const ms = e.Date.getTime()
+                if (ms < now && checked.includes(mark)) {
+                    continue
+                }
+                if (ms != lastDate) {
+                    if (lastDate > 3) {
+                        divNotices.appendChild(document.createElement('hr'))
+                    }
+                    const time = document.createElement('time')
+                    time.innerText = GetDateZhString(e.Date)
+                    time.dateTime = GetDateString(e.Date)
+                    divNotices.appendChild(time)
+                    lastDate = ms
+                }
+                const input = document.createElement('input')
+                input.type = 'checkbox'
+                input.title = mark
+                input.checked = checked.includes(input.title)
+                input.addEventListener('change', function () {
+                    onChange(this.title, this.checked)
+                })
+                const label = document.createElement('label')
+                label.innerText = `${e.Title}（${e.GroupName}）`
+                label.addEventListener('click', function () {
+                    input.checked = !input.checked
+                    onChange(input.title, input.checked)
+                })
+                divNotices.appendChild(input)
+                divNotices.appendChild(label)
+                divNotices.appendChild(document.createElement('br'))
+            }
+            refreshClearButton(checked.length)
+            sendDesktopNotices()
         }
-        await SetLocalValue(reminderText, txt)
-    }
 
-    (async function () {
-        butUpdateEvents.addEventListener('click', updateEvents)
-        txtEventList.value = await GetLocalValue(reminderText, "")
-        updateEvents()
-        const olds = await GetLocalValue(reminderMarks, [])
-        butForgetOldMarks.innerText += `(${olds.length})`
-        butForgetOldMarks.addEventListener('click', async function () {
-            await SetLocalValue(reminderMarks, null)
-            location.reload()
-        })
-    })()
-}
+        function addGroupUI(initGroupName: string = '') {
+            const div = document.createElement('div')
+            const h2 = document.createElement('h2')
+            div.appendChild(h2)
+            const p = document.createElement('p')
+            div.appendChild(p)
+            const editor = document.createElement('textarea')
+            div.appendChild(editor)
+            const butEdit = document.createElement('button')
+            div.appendChild(butEdit)
+            const displayEvents = async function () {
+                const groupName = h2.innerText
+                const evs = await getGroupEvents(groupName)
+                if (evs == null) {
+                    throw '不应该出现的情况，分组是 null'
+                }
+                let out = ''
+                for (const e of evs.YearlyEvents) {
+                    if (e.UseChineseCalendar) {
+                        out += `每年 ${GetZhMonthName(e.Month)} ${GetZhDayName(e.Day)}：${e.Title}\n`
+                    } else {
+                        out += `每年 ${e.Month.toFixed().padStart(2, `0`)} 月 ${e.Day.toFixed().padStart(2, `0`)} 日：${e.Title}\n`
+                    }
+                }
+                for (const e of evs.IntervalEvents) {
+                    const dt = new Date(e.StartTimeMs)
+                    out += `${GetDateZhString(dt)}${e.MoveForward ? '起每' : '之前'} ${e.DayInterval} 天：${e.Title}\n`
+                }
+                p.innerText = out
+                p.style.display = 'block'
+                editor.style.display = 'none'
+                butEdit.innerText = '编辑'
+            }
+            const goEdit = async function () {
+                p.style.display = 'none'
+                editor.style.display = "block"
+                butEdit.innerText = '保存'
+                let out = ''
+                const groupName = h2.innerText
+                if (groupName.length > 0) {
+                    const evs = await getGroupEvents(groupName)
+                    if (evs == null) {
+                        throw '不应该出现的情况，分组是 null'
+                    }
+                    out = groupName + '\n\n'
+                    for (const e of evs.YearlyEvents) {
+                        out += `${e.Month.toFixed().padStart(2, `0`)}-${e.Day.toFixed().padStart(2, `0`)}${e.UseChineseCalendar ? 'n' : ' '} ${e.Title}\n`
+                    }
+                    for (const e of evs.IntervalEvents) {
+                        const dt = new Date(e.StartTimeMs)
+                        out += `${GetDateString(dt, '')}${e.MoveForward ? '+' : '-'}${e.DayInterval.toFixed().padEnd(4, ' ')} ${e.Title}\n`
+                    }
+                } else {
+                    out = `第一行是分组标题\n`
+                }
+                editor.value = out
+            }
+            butEdit.addEventListener('click', async function () {
+                if (editor.style.display == 'none') {
+                    goEdit()
+                } else {
+                    const str = editor.value.normalize().trim()
+                    const groupNames = await getAllGroups()
+                    const oldname = h2.innerText.toUpperCase()
+                    let name = oldname
+                    if (str.length < 1) {
+                        const index = groupNames.indexOf(name)
+                        if (index >= 0) {
+                            groupNames.splice(index, 1)
+                            await SetLocalValue(reminderGroup, groupNames)
+                            await SetLocalValue(reminderGroup + name, null)
+                        }
+                        div.remove()
+                        return
+                    }
+                    const lines = str.split(/[\n\r]+/g)
+                    const YearlyEvents: Array<YearlyEvent> = []
+                    const IntervalEvents: Array<IntervalEvent> = []
+                    const usedtitles: Array<string> = []
+                    const checkIfTitleRepeated = function (tt: string) {
+                        tt = tt.normalize().toLowerCase()
+                        if (usedtitles.includes(tt)) { throw `事件标题不能重复使用` }
+                        usedtitles.push(tt)
+                    }
+                    for (let index = 0; index < lines.length; index++) {
+                        let line = lines[index].trim()
+                        if (index < 1) {
+                            if (line.length < 1) {
+                                alert('第一行是分组标题，不能为空')
+                                return
+                            }
+                            line = line.toUpperCase()
+                            if (line != name) {
+                                if (groupNames.includes(line)) {
+                                    alert(`已经有其他分组使用了这个标题：${line}`)
+                                    return
+                                }
+                                name = line
+                            }
+                        } else {
+                            if (line.length < 1) {
+                                continue
+                            }
+                            try {
+                                let dtev = parseYearlyEvent(line)
+                                if (dtev == null) {
+                                    let itev = parseIntervalEvent(line)
+                                    if (itev == null) { throw '格式出错，不符合任何条件' }
+                                    checkIfTitleRepeated(itev.Title)
+                                    IntervalEvents.push(itev)
+                                } else {
+                                    checkIfTitleRepeated(dtev.Title)
+                                    YearlyEvents.push(dtev)
+                                }
+                            } catch (error) {
+                                alert(`第 ${index + 1} 行出错：${error}\n${line}`)
+                                return
+                            }
+                        }
+                    }
+                    if (YearlyEvents.length + IntervalEvents.length < 1) {
+                        alert('分组内不能没有任何事件')
+                        return
+                    }
+                    if (name != oldname) {
+                        if (oldname.length > 0) {
+                            const index = groupNames.indexOf(oldname)
+                            if (index >= 0) {
+                                groupNames.splice(index, 1)
+                            }
+                        }
+                        groupNames.push(name)
+                        groupNames.sort(function (a, b) { return a.localeCompare(b) })
+                        await SetLocalValue(reminderGroup, groupNames)
+                        if (oldname.length > 0) {
+                            await SetLocalValue(reminderGroup + oldname, null)
+                        }
+                    }
+                    const evs: Events = {
+                        YearlyEvents: YearlyEvents,
+                        IntervalEvents: IntervalEvents
+                    }
+                    await SetLocalValue(reminderGroup + name, evs)
+                    h2.innerText = name
+                    displayEvents()
+                    refreshNoticesUI()
+                }
+            })
+            divGroups.insertBefore(div, divGroups.firstChild)
+            if (initGroupName.length > 0) {
+                h2.innerText = initGroupName
+                displayEvents()
+            } else {
+                goEdit()
+            }
+        }
+    } else {
+        sendDesktopNotices()
+    }
+})()

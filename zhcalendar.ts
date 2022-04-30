@@ -136,11 +136,9 @@ const zhCalendarData = {
                 }
                 let needSlowCheck = false
                 if (moveuntil == null) {
-                    if (passDays + monthdays >= daysDiff) {
-                        needSlowCheck = true
-                    }
+                    if (passDays + monthdays >= daysDiff) { needSlowCheck = true }
                 } else {
-                    if (moveuntil.Year == year && moveuntil.Month == month) {
+                    if (moveuntil.Year == year && moveuntil.Month == month && moveuntil.IsLeapMonth == isLeapMonth) {
                         needSlowCheck = true
                     } else if (moveuntil.Year < year) {
                         return null
@@ -150,13 +148,9 @@ const zhCalendarData = {
                     for (let day = 1; day <= monthdays; day++) {
                         let ok = false
                         if (moveuntil == null) {
-                            if (passDays >= daysDiff) {
-                                ok = true
-                            }
+                            if (passDays >= daysDiff) { ok = true }
                         } else {
-                            if (moveuntil.IsLeapMonth == isLeapMonth && moveuntil.Day == day) {
-                                ok = true
-                            }
+                            if (moveuntil.Day == day) { ok = true }
                         }
                         if (ok) {
                             const r: ZhCalendarDateValue = {

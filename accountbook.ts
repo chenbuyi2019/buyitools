@@ -1,7 +1,6 @@
 /// <reference path="global.ts" />
 
 if (location.pathname == "/accountbook.html") {
-
     interface MoneyEvent {
         Number: number,
         Text: string,
