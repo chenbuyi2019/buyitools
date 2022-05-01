@@ -134,6 +134,7 @@ if (location.pathname == "/accountbook.html") {
         let sumdailyspend = 0
         const wastes: MoneyEvent[] = []
         const spends: MoneyEvent[] = []
+        const earns: MoneyEvent[] = []
         let maxdate = 0
         let mindate = 0
         for (const day of days) {
@@ -157,6 +158,7 @@ if (location.pathname == "/accountbook.html") {
             for (const e of events) {
                 if (e.Number > 0) {
                     sumearn += e.Number
+                    earns.push(e)
                 } else {
                     sumspend += e.Number
                     spends.push(e)
@@ -184,6 +186,21 @@ if (location.pathname == "/accountbook.html") {
                 tr.appendChild(d2)
                 table.appendChild(tr)
             }
+            const addMax = function (title: string, array: Array<MoneyEvent>) {
+                let out = '无'
+                if (array.length > 0) {
+                    const shownmax: number = 10
+                    out = ''
+                    let c = 0
+                    array.sort(SortMoneyEvents)
+                    for (const e of array) {
+                        out += `${e.Text} ${e.Number.toFixed(2)}\n`
+                        c += 1
+                        if (c >= shownmax) { break }
+                    }
+                }
+                addLine(title, out)
+            }
             const endDtstr = GetDateString(new Date(maxdate))
             addLine("统计范围", `${GetDateString(new Date(mindate))}\n${maxdate != mindate ? endDtstr : ""}`)
             addLine("有记录的天数", countdays.toFixed(0))
@@ -193,33 +210,9 @@ if (location.pathname == "/accountbook.html") {
             const lefts = sumearn + sumspend
             addLine("总结余", lefts.toFixed(2))
             addLine("平均每日开支", (sumdailyspend / countdays).toFixed(2))
-            if (spends.length > 0) {
-                let out = ''
-                spends.sort(SortMoneyEvents)
-                const shownmax: number = 13
-                let c = 0
-                for (const e of spends) {
-                    out += `${e.Number.toFixed(2)} ${e.Text}\n`
-                    c += 1
-                    if (c >= shownmax) {
-                        break
-                    }
-                }
-                addLine('最花钱的项目', out)
-                if (wastes.length > 0) {
-                    wastes.sort(SortMoneyEvents)
-                    out = ''
-                    c = 0
-                    for (const e of wastes) {
-                        out += `${e.Number.toFixed(2)} ${e.Text}\n`
-                        c += 1
-                        if (c >= shownmax) {
-                            break
-                        }
-                    }
-                    addLine('最浪费钱的项目', out)
-                }
-            }
+            addMax('最花钱的项目', spends)
+            addMax('最浪费钱的项目', wastes)
+            addMax('最赚钱的项目', earns)
             statResult.appendChild(table)
             displayDatesDetails(endDtstr)
             inputStartDate.valueAsDate = new Date(mindate)
