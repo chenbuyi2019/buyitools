@@ -134,22 +134,20 @@
                         }
                     }
                 } else {
-                    const dt = new Date()
-                    dt.setHours(0, 0, 0, 0)
-                    dt.setMonth(e.Month - 1, e.Day)
-                    if (dt.getTime() < todayMs) {
-                        dt.setFullYear(thisYear + 1)
-                        dt.setMonth(e.Month - 1, e.Day)
-                    }
-                    const ms = dt.getTime()
-                    if (ms >= noticeStarts && ms <= noticeEnds) {
-                        const oe: OutputEvent = {
-                            GroupName: groupname,
-                            Title: e.Title,
-                            Date: dt,
-                            DateStr: GetDateZhString(dt)
+                    for (let i = 0; i < 2; i++) {
+                        const dt = new Date()
+                        dt.setHours(0, 0, 0, 0)
+                        dt.setFullYear(thisYear + i, e.Month - 1, e.Day)
+                        const ms = dt.getTime()
+                        if (ms >= noticeStarts && ms <= noticeEnds) {
+                            const oe: OutputEvent = {
+                                GroupName: groupname,
+                                Title: e.Title,
+                                Date: dt,
+                                DateStr: GetDateZhString(dt)
+                            }
+                            out.push(oe)
                         }
-                        out.push(oe)
                     }
                 }
             }
