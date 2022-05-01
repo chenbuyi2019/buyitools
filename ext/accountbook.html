@@ -50,7 +50,7 @@
             padding: 7px;
             display: grid;
             grid-template-columns: auto;
-            grid-template-rows: 50px 100px auto;
+            grid-template-rows: min-content min-content auto;
         }
 
         #statResult {
@@ -83,13 +83,14 @@
         </div>
         <div>
             <div id="statbuttons">
+                <button title="8">近8天</button>
+                <button title="17">近17天</button>
                 <button title="35">近35天</button>
                 <button title="62">近两个月</button>
                 <button title="93">近三个月</button>
                 <button title="183">近半年</button>
                 <button title="366">近一年</button>
             </div>
-            <br>
             <input type="date" id="inputStartDate">
             <input type="date" id="inputEndDate">
             <button id="butDoStat">统计</button>
