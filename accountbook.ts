@@ -80,7 +80,7 @@ if (location.pathname == "/accountbook.html") {
         days.sort(function (a, b) {
             return -a.localeCompare(b)
         })
-        const maxshown = 20
+        const maxshown = 40
         let shown = 0
         for (let index = 0; index < days.length; index++) {
             const dtstr = days[index]
