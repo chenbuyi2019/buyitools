@@ -1,0 +1,12 @@
+image: node:latest
+
+build: 
+  stage: build
+  script: 
+    - npm install -g typescript
+    - npm install -g web-ext
+    - tsc --build
+    - web-ext build --overwrite-dest
+  artifacts:
+    paths:
+      - ext/web-ext-artifacts/*.zip
