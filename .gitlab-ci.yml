@@ -7,7 +7,7 @@ build:
     - npm install -g web-ext
     - npm install
     - tsc --build
-    - cd /ext
+    - cd ./ext/
     - web-ext build --overwrite-dest
   artifacts:
     paths:

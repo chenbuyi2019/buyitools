@@ -13,7 +13,8 @@ tsc --build
 安装 [web-ext](https://extensionworkshop.com/documentation/develop/getting-started-with-web-ext/) 并打包：   
 ```bash
 npm install --g web-ext
-web-ext build
+cd ./ext/
+web-ext build --overwrite-dest
 ```
 
 使用 Firefox ESR 或者 Developer Version 来安装和运行扩展   
