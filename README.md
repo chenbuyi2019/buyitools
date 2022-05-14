@@ -3,15 +3,13 @@
 我自己用的 Firefox 浏览器扩展，工具箱性质，只是我觉得它对一般人来说就是个垃圾。   
 
 ## 编译方法 
-安装 Firefox 扩展的 ts 定义文件：  `npm install`    
-安装 Typescript 并编译： 
 ```bash
+# 安装 Firefox 扩展的 ts 定义文件
+npm install
+# 安装 Typescript 并编译
 npm install -g typescript
 tsc --build
-```
-
-安装 [web-ext](https://extensionworkshop.com/documentation/develop/getting-started-with-web-ext/) 并打包：   
-```bash
+# 安装 Mozilla 的 web-ext
 npm install --g web-ext
 cd ./ext/
 web-ext build --overwrite-dest
