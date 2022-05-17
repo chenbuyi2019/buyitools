@@ -61,8 +61,8 @@
         today.setHours(0, 0, 0, 0)
         const todayMs = today.getTime()
         const thisYear = today.getFullYear()
-        const noticeEnds = todayMs + 10 * oneDay
-        const noticeStarts = todayMs - 5 * oneDay
+        const noticeEnds = todayMs + 7 * oneDay
+        const noticeStarts = todayMs - 7 * oneDay
         for (const groupname of groupNames) {
             const evs = await getGroupEvents(groupname)
             if (evs == null) { continue }
@@ -174,7 +174,7 @@
         const notices = await getNotices()
         const checked = await getCheckedMarks()
         let sent = 0
-        let timeLimit = 24 * 60 * 60 * 1000 * 3
+        let timeLimit = 24 * 60 * 60 * 1000 * 2
         for (const e of notices) {
             const ms = e.Date.getTime()
             if (Math.abs(ms - now) > timeLimit) { continue }
