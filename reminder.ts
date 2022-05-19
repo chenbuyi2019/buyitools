@@ -174,7 +174,7 @@
         const notices = await getNotices()
         const checked = await getCheckedMarks()
         let sent = 0
-        let timeLimit = 24 * 60 * 60 * 1000 * 2
+        let timeLimit = 24 * 60 * 60 * 1000 * 1.5
         for (const e of notices) {
             const ms = e.Date.getTime()
             if (Math.abs(ms - now) > timeLimit) { continue }
