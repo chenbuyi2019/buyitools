@@ -37,7 +37,7 @@ if (location.pathname == "/accountbook.html") {
         const time = document.createElement('time')
         const dtstr = GetDateString(dt)
         time.dateTime = dtstr
-        time.innerText = `${GetDateZhString(dt)}\n${GetWeekdayZhString(dt)}`
+        time.innerText = `${GetDateZhString(dt)}\n${GetDaysZhString(dt)}`
         div.className = 'DayDetail'
         div.appendChild(time)
         const e = new MoneyBoxElement(accountdays + GetDateString(dt))

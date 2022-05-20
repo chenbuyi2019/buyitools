@@ -3,19 +3,35 @@ const bigTitle: string = browser.runtime.getManifest().name
 const isBackground: boolean = location.pathname.includes("background")
 
 // 把 date 转换为 2010-01-29 的格式
-function GetDateString(d: Date, add: string = '-') {
+function GetDateString(d: Date, add: string = '-'): string {
     return `${d.getFullYear()}${add}${(d.getMonth() + 1).toFixed().padStart(2, '0')}${add}${d.getDate().toFixed().padStart(2, '0')}`
 }
 
 // 把 date 转换为 2010 年 01 月 29 日 的汉字格式
-function GetDateZhString(d: Date) {
+function GetDateZhString(d: Date): string {
     return `${d.getFullYear()} 年 ${(d.getMonth() + 1).toFixed().padStart(2, '0')} 月 ${d.getDate().toFixed().padStart(2, '0')} 日`
 }
 
-// 把 date 转换为 星期五 的汉字格式
-function GetWeekdayZhString(d: Date) {
-    const s: string = "日一二三四五六"
-    return `星期${s.charAt(d.getDay())}`
+// 把 date 转换为 今天 昨天 明天 后天 周六 这样的汉字格式
+function GetDaysZhString(d: Date): string {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const target = new Date(d.getTime())
+    target.setHours(0, 0, 0, 0)
+    const days = (target.getTime() - today.getTime()) / (1000 * 24 * 60 * 60)
+    switch (days) {
+        case 0:
+            return '今天'
+        case 1:
+            return '明天'
+        case 2:
+            return '后天'
+        case -1:
+            return '昨天'
+        case -2:
+            return '前天'
+    }
+    return '周' + '日一二三四五六'.charAt(target.getDay())
 }
 
 // 发送简单的推送消息

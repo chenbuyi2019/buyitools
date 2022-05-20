@@ -307,7 +307,7 @@
                         divNotices.appendChild(document.createElement('hr'))
                     }
                     const time = document.createElement('time')
-                    time.innerText = GetDateZhString(e.Date)
+                    time.innerText = GetDateZhString(e.Date) + ' ' + GetDaysZhString(e.Date)
                     time.dateTime = GetDateString(e.Date)
                     divNotices.appendChild(time)
                     lastDate = ms
