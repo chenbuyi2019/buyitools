@@ -180,7 +180,7 @@
             if (Math.abs(ms - now) > timeLimit) { continue }
             const mark = getOutputEventMarkStr(e)
             if (checked.includes(mark)) { continue }
-            await SendNotice('日程提醒', `${e.Title}\n${e.GroupName}\n${e.DateStr}`)
+            await SendNotice('日程提醒', `${e.Title}\n${e.GroupName}\n${e.DateStr}` , "reminder")
             sent += 1
         }
         if (sent > 0) {

@@ -34,14 +34,17 @@ function GetDaysZhString(d: Date): string {
     return '周' + '日一二三四五六'.charAt(target.getDay())
 }
 
+const NoticeIdLinks = new Map<string, string>()
+
 // 发送简单的推送消息
-async function SendNotice(title: string, text: string) {
-    await browser.notifications.create({
+async function SendNotice(title: string, text: string, targetPage: string) {
+    const id = await browser.notifications.create({
         type: "basic",
         message: text,
         title: `${title} - ${bigTitle}`,
         iconUrl: "/icon.jpg"
     })
+    NoticeIdLinks.set(id, targetPage)
 }
 
 async function SetLocalValue(key: string, obj: any) {
@@ -93,21 +96,31 @@ function GetDayDiffZhString(days: number): string {
 }
 
 if (isBackground) {
-    const switchToIndex = async function () {
+    const idurl = browser.runtime.getURL("")
+    const switchToIndex = async function (targetPage: string) {
         const tabs = await browser.tabs.query({ currentWindow: true, title: bigTitle })
+        const newURL = idurl + "index.html#" + targetPage
         for (const tab of tabs) {
             const u = tab.url
             const id = tab.id
             if (u == null || id == null) {
                 continue
             }
-            if (!u.startsWith('http') && u.endsWith("/index.html")) {
-                browser.tabs.update(id, { active: true })
+            if (u.startsWith(idurl)) {
+                browser.tabs.update(id, { active: true, url: newURL })
                 return
             }
         }
-        browser.tabs.create({ url: "/index.html", active: true })
+        browser.tabs.create({ url: newURL, active: true })
     }
-    browser.browserAction.onClicked.addListener(switchToIndex)
-    browser.notifications.onClicked.addListener(switchToIndex)
+    browser.browserAction.onClicked.addListener(function () {
+        switchToIndex("")
+    })
+    browser.notifications.onClicked.addListener(function (nid: string) {
+        let target = NoticeIdLinks.get(nid)
+        if (target == null) {
+            target = ''
+        }
+        switchToIndex(target)
+    })
 }
