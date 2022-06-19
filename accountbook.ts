@@ -186,13 +186,17 @@ if (location.pathname == "/accountbook.html") {
                 tr.appendChild(d2)
                 table.appendChild(tr)
             }
-            const addMax = function (title: string, array: Array<MoneyEvent>) {
+            const addMax = function (title: string, array: Array<MoneyEvent>, reversal: boolean) {
                 let out = '无'
                 if (array.length > 0) {
                     const shownmax: number = 10
                     out = ''
                     let c = 0
-                    array.sort(SortMoneyEvents)
+                    array.sort(function (a, b): number {
+                        const v = SortMoneyEvents(a, b)
+                        if (reversal) { return -v }
+                        return v
+                    })
                     for (const e of array) {
                         out += `${e.Text} ${e.Number.toFixed(2)}\n`
                         c += 1
@@ -210,9 +214,9 @@ if (location.pathname == "/accountbook.html") {
             const lefts = sumearn + sumspend
             addLine("总结余", lefts.toFixed(2))
             addLine("平均每日开支", (sumdailyspend / countdays).toFixed(2))
-            addMax('最花钱的项目', spends)
-            addMax('最浪费钱的项目', wastes)
-            addMax('最赚钱的项目', earns)
+            addMax('最花钱的项目', spends, false)
+            addMax('最浪费钱的项目', wastes, false)
+            addMax('最赚钱的项目', earns, true)
             statResult.appendChild(table)
             displayDatesDetails(endDtstr)
             inputStartDate.valueAsDate = new Date(mindate)

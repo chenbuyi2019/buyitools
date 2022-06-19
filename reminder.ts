@@ -7,6 +7,7 @@
     if (!isReminderPage && !isBackground) { return }
     const reminderGroup: string = 'reminderg'
     const checkdMarks: string = 'checkdMarks'
+    const reminderNextSendTime: string = 'ReminderNextSendTime'
 
     interface Events {
         YearlyEvents: Array<YearlyEvent>,
@@ -167,24 +168,23 @@
     }
 
     async function sendDesktopNotices() {
-        const tt: string = 'ReminderNextSendTime'
-        const next = await GetLocalValue(tt, 0)
+        const next = await GetLocalValue(reminderNextSendTime, 0)
         const now = (new Date).getTime()
         if (next > now) { return }
         const notices = await getNotices()
         const checked = await getCheckedMarks()
         let sent = 0
-        let timeLimit = 24 * 60 * 60 * 1000 * 1.5
+        let timeLimit = 24 * 60 * 60 * 1000 * 1.1
         for (const e of notices) {
             const ms = e.Date.getTime()
-            if (Math.abs(ms - now) > timeLimit) { continue }
+            if (ms - now > timeLimit) { continue }
             const mark = getOutputEventMarkStr(e)
             if (checked.includes(mark)) { continue }
-            await SendNotice('日程提醒', `${e.Title}\n${e.GroupName}\n${e.DateStr}` , "reminder")
+            await SendNotice('日程提醒', `${e.Title}\n${e.GroupName}\n${GetDaysZhString(e.Date)}`, "reminder")
             sent += 1
         }
         if (sent > 0) {
-            await SetLocalValue(tt, now + 1000 * 15)
+            await SetLocalValue(reminderNextSendTime, now + 1000 * 15)
         }
     }
 
@@ -255,6 +255,7 @@
             butClearCheckedMarks.title = butClearCheckedMarks.innerText
             butClearCheckedMarks.addEventListener('click', async function () {
                 await SetLocalValue(checkdMarks, null)
+                await SetLocalValue(reminderNextSendTime, 0)
                 location.reload()
             })
             await refreshNoticesUI()
