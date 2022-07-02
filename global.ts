@@ -70,15 +70,17 @@ async function GetLocalValue(key: string, defaultValue: any = null): Promise<any
     return v
 }
 
+// 获取一个公历月份里面的天数
+function GetDaysCountInMonth(month: number): number {
+    const day31 = [1, 3, 5, 7, 8, 10, 12]
+    if (day31.includes(month)) { return 31 }
+    return month === 2 ? 29 : 30
+}
+
 // 判断这个公历月日是否合理
 function IsGoodDate(month: number, date: number): boolean {
-    const day31 = [1, 3, 5, 7, 8, 10, 12]
-    if (day31.includes(month)) {
-        return date <= 31
-    } else if (month == 2) {
-        return date <= 29
-    }
-    return date <= 30
+    let days = GetDaysCountInMonth(month)
+    return date <= days
 }
 
 // 根据天数之差获取汉字表达形式

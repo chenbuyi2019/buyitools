@@ -98,19 +98,45 @@ if (location.pathname == "/accountbook.html") {
         const today = new Date()
         displayDatesDetails(GetDateString(today))
         inputEndDate.valueAsDate = today
-        today.setDate(today.getDate() - 3)
-        inputStartDate.valueAsDate = today
+        const daysAgo = new Date()
+        daysAgo.setDate(today.getDate() - 3)
+        inputStartDate.valueAsDate = daysAgo
         const statbuttons = document.getElementById('statbuttons') as HTMLDivElement
-        const buttons = statbuttons.getElementsByTagName('button')
-        for (const button of buttons) {
-            button.addEventListener('click', function (this) {
-                const today = new Date()
-                const days = parseInt(this.title)
-                inputEndDate.valueAsDate = today
-                today.setDate(today.getDate() - days)
-                inputStartDate.valueAsDate = today
+        const thisYear = today.getFullYear()
+        const thisMonth = today.getMonth()
+        for (const monthDiff of [0, 1, 2, 3, 4, 5]) {
+            const button = document.createElement("button")
+            let statYear = thisYear
+            let statMonth = thisMonth - monthDiff
+            while (statMonth < 0) {
+                statMonth += 12
+                statYear -= 1
+            }
+            button.innerText = `${(statMonth + 1).toFixed().padStart(2, "0")}月`
+            button.addEventListener('click', function () {
+                let startDay = new Date()
+                startDay.setHours(23, 0, 0, 0)
+                startDay.setFullYear(statYear, statMonth, 1)
+                inputStartDate.valueAsDate = startDay
+                startDay.setDate(GetDaysCountInMonth(statMonth + 1))
+                inputEndDate.valueAsDate = startDay
                 butDoStat.click()
             })
+            statbuttons.appendChild(button)
+        }
+        statbuttons.appendChild(document.createElement("br"))
+        for (const daysDiff of [60, 90, 180, 365]) {
+            const button = document.createElement("button")
+            button.innerText = `近${daysDiff}天`
+            button.addEventListener('click', function () {
+                let startDay = new Date()
+                startDay.setHours(23, 0, 0, 0)
+                inputStartDate.valueAsDate = startDay
+                startDay.setDate(startDay.getDate() - daysDiff)
+                inputEndDate.valueAsDate = startDay
+                butDoStat.click()
+            })
+            statbuttons.appendChild(button)
         }
     })();
 
@@ -118,7 +144,7 @@ if (location.pathname == "/accountbook.html") {
         statResult.innerText = ""
         const t1 = inputStartDate.valueAsDate
         const t2 = inputEndDate.valueAsDate
-        if (t1 == null || t2 == null) {
+        if (t1 === null || t2 === null) {
             statResult.innerText = "开始和结束时间不能为空白"
             return
         }
@@ -133,7 +159,7 @@ if (location.pathname == "/accountbook.html") {
         let countdays = 0
         let sumdailyspend = 0
         const wastes: MoneyEvent[] = []
-        const spends: MoneyEvent[] = []
+        const spendButNoWastes: MoneyEvent[] = []
         const earns: MoneyEvent[] = []
         let maxdate = 0
         let mindate = 0
@@ -161,10 +187,11 @@ if (location.pathname == "/accountbook.html") {
                     earns.push(e)
                 } else {
                     sumspend += e.Number
-                    spends.push(e)
                     if (e.Waste) {
                         sumwaste += e.Number
                         wastes.push(e)
+                    } else {
+                        spendButNoWastes.push(e)
                     }
                     if (e.Number >= -70) {
                         sumdailyspend += e.Number
@@ -209,14 +236,14 @@ if (location.pathname == "/accountbook.html") {
             addLine("统计范围", `${GetDateString(new Date(mindate))}\n${maxdate != mindate ? endDtstr : ""}`)
             addLine("有记录的天数", countdays.toFixed(0))
             addLine("总收入", sumearn.toFixed(2))
-            addLine("总开支", sumspend.toFixed(2))
+            addLine("总开支（包括浪费）", sumspend.toFixed(2))
             addLine("总浪费", sumwaste.toFixed(2))
             const lefts = sumearn + sumspend
             addLine("总结余", lefts.toFixed(2))
             addLine("平均每日开支", (sumdailyspend / countdays).toFixed(2))
-            addMax('最花钱的项目', spends, false)
-            addMax('最浪费钱的项目', wastes, false)
-            addMax('最赚钱的项目', earns, true)
+            addMax('非浪费最花钱的项', spendButNoWastes, false)
+            addMax('最浪费钱的项', wastes, false)
+            addMax('最赚钱的项', earns, true)
             statResult.appendChild(table)
             displayDatesDetails(endDtstr)
             inputStartDate.valueAsDate = new Date(mindate)
