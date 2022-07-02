@@ -216,7 +216,7 @@ if (location.pathname == "/accountbook.html") {
             const addMax = function (title: string, array: Array<MoneyEvent>, reversal: boolean) {
                 let out = '无'
                 if (array.length > 0) {
-                    const shownmax: number = 10
+                    const shownmax: number = 25
                     out = ''
                     let c = 0
                     array.sort(function (a, b): number {
