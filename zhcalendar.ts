@@ -1,4 +1,19 @@
-// 传入公历，获取农历的日期，公历不能小于2021年2月12日，也不能大于2050年
+
+/**
+ * 农历日期信息，年月日，是否是润月，对应的公历日期
+ * @interface ZhCalendarDateValue
+ */
+interface ZhCalendarDateValue {
+    Year: number,
+    Month: number,
+    Day: number,
+    IsLeapMonth: boolean,
+    Date: Date | null
+}
+
+/**
+ * 传入公历，获取农历的日期，公历不能小于2021年2月12日，也不能大于2050年
+ */
 function GetZhCalendarDate(dt: Date): ZhCalendarDateValue | null {
     if (isNaN(dt.getFullYear())) {
         return null
@@ -14,14 +29,18 @@ function GetZhCalendarDate(dt: Date): ZhCalendarDateValue | null {
     return zhCalendarData.moveDays(daysDiff)
 }
 
-// 传入农历，获取公历的日期，农历不能小于2021年正月初一，也不能大于2050年
+/**
+ * 传入农历，获取公历的日期，农历不能小于2021年正月初一，也不能大于2050年
+ */
 function GetDateFromZhCalendarDate(zh: ZhCalendarDateValue): Date | null {
     const v = zhCalendarData.moveDays(0, zh)
     if (v == null) { return null }
     return v.Date
 }
 
-// 获取农历月份的汉语名字
+/**
+ * 获取农历月份的汉语名字
+ */
 function GetZhMonthName(m: number): string {
     m = Math.round(m)
     if (isNaN(m) || m < 1 || m > 12) { return '' }
@@ -36,7 +55,9 @@ function GetZhMonthName(m: number): string {
     return f + '月'
 }
 
-// 获取农历日子的汉语名字
+/**
+ * 获取农历日子的汉语名字
+ */
 function GetZhDayName(d: number): string {
     d = Math.round(d)
     if (isNaN(d) || d < 1 || d > 30) { return '' }
@@ -57,16 +78,10 @@ function GetZhDayName(d: number): string {
     return f + '一二三四五六七八九十'.charAt(d - 1)
 }
 
-interface ZhCalendarDateValue {
-    Year: number,
-    Month: number,
-    Day: number,
-    IsLeapMonth: boolean,
-    Date: Date | null
-}
 
+/** 农历计算的核心 */
 const zhCalendarData = {
-    dateStart: new Date(1613059200000), // 目前是2021年2月12日，大年初一
+    dateStart: new Date(1613059200000), // 目前 dateStart 是2021年2月12日，大年初一
     // 1表示普通小月，2表示普通大月，3表示闰小月，4表示闰大月
     years: [
         [1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1],
@@ -100,6 +115,11 @@ const zhCalendarData = {
         [2, 1, 2, 1, 2, 2, 1, 2, 2, 1, 2, 1],
         [1, 2, 1, 4, 1, 2, 1, 2, 2, 1, 2, 2, 1]
     ],
+    /**
+     * 移动指定的天数来计算公历和农历。
+     * 如果 moveuntil 是 null ，就看 daysDiff ，移动了多少天，返回对应的农历
+     * 如果不是 null ，就一直向后移动，移动到某一天发现一致的时候，返回对应的农历
+     */
     moveDays(daysDiff: number, moveuntil: ZhCalendarDateValue | null = null): ZhCalendarDateValue | null {
         let year = zhCalendarData.dateStart.getFullYear()
         if (moveuntil == null) {
@@ -148,9 +168,9 @@ const zhCalendarData = {
                     for (let day = 1; day <= monthdays; day++) {
                         let ok = false
                         if (moveuntil == null) {
-                            if (passDays >= daysDiff) { ok = true }
+                            ok = passDays >= daysDiff
                         } else {
-                            if (moveuntil.Day == day) { ok = true }
+                            ok = moveuntil.Day == day
                         }
                         if (ok) {
                             const r: ZhCalendarDateValue = {

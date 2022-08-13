@@ -1,6 +1,7 @@
 /// <reference path="global.ts" />
 /// <reference path="moneyBoxElement.ts" />
 
+// 资产页面
 if (location.pathname == "/money.html") {
     const topSum = document.getElementById('topSum') as HTMLElement
     const topSumTtitle = topSum.innerText
@@ -31,7 +32,7 @@ if (location.pathname == "/money.html") {
         allSections.push(e)
         setTimeout(function () {
             if (e.OnDataUpdated == null) { return }
-            e.OnDataUpdated(e.DataKey, e.Events)
+            e.OnDataUpdated(e.DataKey, e.Records)
         }, 150)
     }
 
@@ -44,7 +45,7 @@ if (location.pathname == "/money.html") {
     function UpdateSum() {
         let sum = 0
         for (const t of allSections) {
-            for (const ev of t.Events) {
+            for (const ev of t.Records) {
                 sum += ev.Number
             }
         }

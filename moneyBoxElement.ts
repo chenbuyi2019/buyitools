@@ -1,10 +1,20 @@
 
-interface MoneyEvent {
+/**
+ * 记账记录
+ * @interface MoneyRecord
+ */
+interface MoneyRecord {
     Number: number,
     Text: string,
     Waste: boolean
 }
 
+/**
+ * 为记账记录 MoneyRecord 准备的专用 UI 。
+ * 创建好之后需把 BoxElement 放置到对应的位置。
+ * dataKey 是自动同步记账记录数据到扩展存储中用的。
+ * @class MoneyBoxElement
+ */
 class MoneyBoxElement {
     constructor(dataKey: string, startEditIfEmpty: boolean = true) {
         this.EditButton.style.display = 'block'
@@ -25,7 +35,7 @@ class MoneyBoxElement {
             } else {
                 const lines = me.Editor.value.split(/[\n\r]+/gim)
                 const regEventLine = /([-\.0-9]+)(w?)\s+(.+)/i
-                me.Events.splice(0, me.Events.length)
+                me.Records.splice(0, me.Records.length)
                 for (const rawline of lines) {
                     const line = rawline.normalize().trim()
                     if (line.length < 1) {
@@ -43,29 +53,29 @@ class MoneyBoxElement {
                         alert(`记录过长或为空：\n${num} ${tt}`)
                         return
                     }
-                    const e: MoneyEvent = {
+                    const e: MoneyRecord = {
                         Waste: waste,
                         Number: num,
                         Text: tt
                     }
-                    me.Events.push(e)
+                    me.Records.push(e)
                 }
                 me.RefreshEventsUI()
                 if (me.DataKey.length > 0) {
-                    const obj = me.Events.length > 0 ? me.Events : null
+                    const obj = me.Records.length > 0 ? me.Records : null
                     await SetLocalValue(me.DataKey, obj)
                     if (me.OnDataUpdated != null) {
-                        me.OnDataUpdated(me.DataKey, me.Events)
+                        me.OnDataUpdated(me.DataKey, me.Records)
                     }
                 }
             }
         });
         (async function () {
             if (me.DataKey.length > 0) {
-                const obj: Array<MoneyEvent> = await GetLocalValue(me.DataKey, [])
+                const obj: Array<MoneyRecord> = await GetLocalValue(me.DataKey, [])
                 if (obj.length > 0) {
                     for (const e of obj) {
-                        me.Events.push(e)
+                        me.Records.push(e)
                     }
                     me.RefreshEventsUI()
                 } else if (startEditIfEmpty) {
@@ -75,11 +85,11 @@ class MoneyBoxElement {
         })()
     }
     readonly BoxElement: HTMLDivElement = document.createElement('div')
-    readonly Events: Array<MoneyEvent> = []
+    readonly Records: Array<MoneyRecord> = []
     readonly Editor: HTMLTextAreaElement = document.createElement('textarea')
     readonly EditButton: HTMLButtonElement = document.createElement('button')
     readonly DataKey: string
-    OnDataUpdated: ((key: string, value: Array<MoneyEvent>) => void) | null = null
+    OnDataUpdated: ((key: string, value: Array<MoneyRecord>) => void) | null = null
     ClearUI() {
         const lines: Element[] = []
         for (const e of this.BoxElement.getElementsByClassName('MoneyBoxLine')) {
@@ -91,13 +101,13 @@ class MoneyBoxElement {
     }
     RefreshEventsUI() {
         this.ClearUI()
-        if (this.Events.length > 0) {
-            this.Events.sort(function (a: MoneyEvent, b: MoneyEvent): number {
+        if (this.Records.length > 0) {
+            this.Records.sort(function (a: MoneyRecord, b: MoneyRecord): number {
                 if (a.Number > b.Number) { return 1 }
                 if (a.Number < b.Number) { return -1 }
                 return 0
             })
-            for (const e of this.Events) {
+            for (const e of this.Records) {
                 const line = document.createElement('div')
                 line.className = "MoneyBoxLine"
                 const num = document.createElement('span')
@@ -130,7 +140,7 @@ class MoneyBoxElement {
         this.Editor.style.display = 'block'
         this.EditButton.innerText = '保存'
         let out = ''
-        for (const e of this.Events) {
+        for (const e of this.Records) {
             out += `${e.Number.toFixed(2)}${e.Waste ? "w" : ""} ${e.Text}\n`
         }
         this.Editor.value = out

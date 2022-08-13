@@ -1,5 +1,6 @@
 /// <reference path="global.ts" />
 
+// 导航页
 if (location.pathname == "/index.html") {
     document.title = bigTitle
 
@@ -29,11 +30,7 @@ if (location.pathname == "/index.html") {
         a.addEventListener('click', onLinkClicked)
         tools.set(filename, a)
     }
-    addTool("资产", "money")
-    addTool("记账", "accountbook")
-    addTool("日程", "reminder")
-    addTool("数据导入导出", "export")
-
+    
     function onHashChanged() {
         let hash = location.hash.replaceAll('#', '')
         if (hash.length > 0) {
@@ -49,5 +46,10 @@ if (location.pathname == "/index.html") {
             onHashChanged()
         }
     })
+
+    addTool("资产", "money")
+    addTool("记账", "accountbook")
+    addTool("日程", "reminder")
+    addTool("数据导入导出", "export")
 
 }

@@ -1,18 +1,9 @@
 /// <reference path="global.ts" />
 
+// 记账页面
 if (location.pathname == "/accountbook.html") {
 
     const accountdays: string = "accountdays"
-
-    /**
-     * 记账记录
-     * @interface MoneyRecord
-     */
-    interface MoneyRecord {
-        Number: number,
-        Text: string,
-        Waste: boolean
-    }
 
     const divDetailList = document.getElementById('detaillist') as HTMLDivElement
     const inputNewDay = document.getElementById('inputNewDay') as HTMLInputElement

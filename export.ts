@@ -1,5 +1,6 @@
 /// <reference path="global.ts" />
 
+// 导出页面
 if (location.pathname == "/export.html") {
     const lastExportTime: string = 'lastExportTime'
 
