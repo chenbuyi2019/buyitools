@@ -1,19 +1,27 @@
 /// <reference path="global.ts" />
 /// <reference path="zhcalendar.ts" />
 
+// 日程页面
 (function () {
-
     const isReminderPage: boolean = location.pathname == "/reminder.html"
     if (!isReminderPage && !isBackground) { return }
     const reminderGroup: string = 'reminderg'
     const checkdMarks: string = 'checkdMarks'
     const reminderNextSendTime: string = 'ReminderNextSendTime'
 
+    const oneDay: number = 24 * 60 * 60 * 1000
+
+    /**
+     * 一个组的日程存储
+     */
     interface Events {
         YearlyEvents: Array<YearlyEvent>,
         IntervalEvents: Array<IntervalEvent>
     }
 
+    /**
+     * 年度事件，按月和日的数字来定
+     */
     interface YearlyEvent {
         Month: number
         Day: number
@@ -21,6 +29,9 @@
         Title: string
     }
 
+    /**
+     * 按天数间隔来发生的事件
+     */
     interface IntervalEvent {
         StartTimeMs: number
         DayInterval: number
@@ -28,6 +39,9 @@
         MoveForward: boolean
     }
 
+    /**
+     * 计算出发生时间的提醒事件
+     */
     interface OutputEvent {
         GroupName: string
         Title: string
@@ -35,34 +49,48 @@
         DateStr: string
     }
 
+    /**
+     * 获取一个组的日程存储
+     */
     async function getGroupEvents(name: string): Promise<Events | null> {
         const v: Events | null = await GetLocalValue(reminderGroup + name, null)
         return v
     }
 
+    /**
+     * 获取一个提醒事件的唯一标记字符串
+     */
     function getOutputEventMarkStr(e: OutputEvent): string {
         return `${e.Date.getTime()}${e.Title}${e.DateStr}${e.GroupName}`
     }
 
+    /**
+     * 获取全部的组名
+     */
     async function getAllGroups(): Promise<Array<string>> {
         const v: Array<string> = await GetLocalValue(reminderGroup, [])
         return v
     }
 
+    /**
+     * 获取全部标记过的提醒事件字符串
+     */
     async function getCheckedMarks(): Promise<Array<string>> {
         const v: Array<string> = await GetLocalValue(checkdMarks, [])
         return v
     }
 
+    /**
+     * 获取最近的提醒事件
+     */
     async function getNotices(): Promise<Array<OutputEvent>> {
         const groupNames = await getAllGroups()
         const out: Array<OutputEvent> = []
-        const oneDay = 24 * 60 * 60 * 1000
         const today = new Date()
         today.setHours(0, 0, 0, 0)
         const todayMs = today.getTime()
         const thisYear = today.getFullYear()
-        const noticeEnds = todayMs + 7 * oneDay
+        const noticeEnds = todayMs + 7 * oneDay   //前后7天的事件都显示在 UI 里
         const noticeStarts = todayMs - 7 * oneDay
         for (const groupname of groupNames) {
             const evs = await getGroupEvents(groupname)
@@ -167,31 +195,13 @@
         return out
     }
 
-    async function sendDesktopNotices() {
-        const next = await GetLocalValue(reminderNextSendTime, 0)
-        const now = (new Date).getTime()
-        if (next > now) { return }
-        const notices = await getNotices()
-        const checked = await getCheckedMarks()
-        let sent = 0
-        let timeLimit = 24 * 60 * 60 * 1000 * 1.1
-        for (const e of notices) {
-            const ms = e.Date.getTime()
-            if (ms - now > timeLimit) { continue }
-            const mark = getOutputEventMarkStr(e)
-            if (checked.includes(mark)) { continue }
-            await SendNotice('日程提醒', `${e.Title}\n${e.GroupName}\n${GetDaysZhString(e.Date)}`, "reminder")
-            sent += 1
-        }
-        if (sent > 0) {
-            await SetLocalValue(reminderNextSendTime, now + 1000 * 15)
-        }
-    }
-
     if (isReminderPage) {
         const regYearlyEvent = /^([0-9]{1,2})-([0-9]{1,2})(n)? +(.+)$/i
         const regIntervalEvent = /^20([0-9]{2})([0-9]{2})([0-9]{2})([+-])([0-9]{1,3}) +(.+)$/i
 
+        /**
+         * 解析年度事件
+         */
         function parseYearlyEvent(str: string): YearlyEvent | null {
             let results = regYearlyEvent.exec(str)
             if (results == null) { return null }
@@ -216,6 +226,9 @@
             return n
         }
 
+        /**
+         * 解析天数间隔事件
+         */
         function parseIntervalEvent(str: string): IntervalEvent | null {
             const results = regIntervalEvent.exec(str)
             if (results == null) { return null }
@@ -244,6 +257,7 @@
         const butNewGroup = document.getElementById('butNewGroup') as HTMLButtonElement
         const butClearCheckedMarks = document.getElementById('butClearCheckedMarks') as HTMLButtonElement
 
+        // 初始化 UI 
         (async function () {
             const groupNames = await getAllGroups()
             for (const name of groupNames) {
@@ -261,6 +275,9 @@
             await refreshNoticesUI()
         })()
 
+        /**
+         * 刷新提醒事件的展示界面，可以打勾来表示已读
+         */
         async function refreshNoticesUI() {
             divNotices.innerText = ''
             const notices = await getNotices()
@@ -331,9 +348,11 @@
                 divNotices.appendChild(document.createElement('br'))
             }
             refreshClearButton(checked.length)
-            sendDesktopNotices()
         }
 
+        /**
+         * 新增组别 UI ，可以修改和保存事件， 类似 moneyBoxElement
+         */
         function addGroupUI(initGroupName: string = '') {
             const div = document.createElement('div')
             const h2 = document.createElement('h2')
@@ -347,9 +366,7 @@
             const displayEvents = async function () {
                 const groupName = h2.innerText
                 const evs = await getGroupEvents(groupName)
-                if (evs == null) {
-                    throw '不应该出现的情况，分组是 null'
-                }
+                if (evs == null) { throw '不应该出现的情况，分组是 null' }
                 let out = ''
                 for (const e of evs.YearlyEvents) {
                     if (e.UseChineseCalendar) {
@@ -491,6 +508,26 @@
             }
         }
     } else {
-        sendDesktopNotices()
+        // 如果是后台页面，发送桌面提醒
+        (async function () {
+            const next = await GetLocalValue(reminderNextSendTime, 0)
+            const now = (new Date).getTime()
+            if (next > now) { return }
+            const notices = await getNotices()
+            const checked = await getCheckedMarks()
+            let sent = 0
+            let timeLimit = oneDay * 1.1 // 时间在 1.1 天之内的事件
+            for (const e of notices) {
+                const ms = e.Date.getTime()
+                if (ms - now > timeLimit) { continue }
+                const mark = getOutputEventMarkStr(e)
+                if (checked.includes(mark)) { continue }
+                await SendNotice('日程提醒', `${e.Title}\n${e.GroupName}\n${GetDaysZhString(e.Date)}`, "reminder")
+                sent += 1
+            }
+            if (sent > 0) {
+                await SetLocalValue(reminderNextSendTime, now + 1000 * 15)
+            }
+        })()
     }
 })()

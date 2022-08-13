@@ -79,7 +79,7 @@ function GetZhDayName(d: number): string {
 }
 
 
-/** 农历计算的核心 */
+/** 农历计算的核心，目前范围是2021年正月初一到2050年 */
 const zhCalendarData = {
     dateStart: new Date(1613059200000), // 目前 dateStart 是2021年2月12日，大年初一
     // 1表示普通小月，2表示普通大月，3表示闰小月，4表示闰大月
@@ -117,17 +117,18 @@ const zhCalendarData = {
     ],
     /**
      * 移动指定的天数来计算公历和农历。
-     * 如果 moveuntil 是 null ，就看 daysDiff ，移动了多少天，返回对应的农历
-     * 如果不是 null ，就一直向后移动，移动到某一天发现一致的时候，返回对应的农历
+     * 如果 moveUntil 是 null ，就看 daysCount ，移动了多少天，返回对应的农历。
+     * 如果 moveUntil 不是 null ，就一直向后移动，移动到某一天发现一致的时候，返回对应的农历。
+     * 如果刚好遇到农历这个月份没有30日，会返回下个月的1日。 
      */
-    moveDays(daysDiff: number, moveuntil: ZhCalendarDateValue | null = null): ZhCalendarDateValue | null {
+    moveDays(daysCount: number, moveUntil: ZhCalendarDateValue | null = null): ZhCalendarDateValue | null {
         let year = zhCalendarData.dateStart.getFullYear()
-        if (moveuntil == null) {
-            if (daysDiff < 0) { return null }
+        if (moveUntil == null) {
+            if (daysCount < 0) { return null }
         } else {
-            if (moveuntil.Year < year || moveuntil.Year >= year + zhCalendarData.years.length) { return null }
-            if (moveuntil.Month < 1 || moveuntil.Month > 12) { return null }
-            if (moveuntil.Day < 1 || moveuntil.Day > 30) { return null }
+            if (moveUntil.Year < year || moveUntil.Year >= year + zhCalendarData.years.length) { return null }
+            if (moveUntil.Month < 1 || moveUntil.Month > 12) { return null }
+            if (moveUntil.Day < 1 || moveUntil.Day > 30) { return null }
         }
         let dt = new Date(zhCalendarData.dateStart.getTime())
         let passDays = 0
@@ -155,22 +156,22 @@ const zhCalendarData = {
                         break
                 }
                 let needSlowCheck = false
-                if (moveuntil == null) {
-                    if (passDays + monthdays >= daysDiff) { needSlowCheck = true }
+                if (moveUntil == null) {
+                    if (passDays + monthdays >= daysCount) { needSlowCheck = true }
                 } else {
-                    if (moveuntil.Year == year && moveuntil.Month == month && moveuntil.IsLeapMonth == isLeapMonth) {
+                    if (moveUntil.Year == year && moveUntil.Month == month && moveUntil.IsLeapMonth == isLeapMonth) {
                         needSlowCheck = true
-                    } else if (moveuntil.Year < year) {
+                    } else if (moveUntil.Year < year) {
                         return null
                     }
                 }
                 if (needSlowCheck) {
                     for (let day = 1; day <= monthdays; day++) {
                         let ok = false
-                        if (moveuntil == null) {
-                            ok = passDays >= daysDiff
+                        if (moveUntil == null) {
+                            ok = passDays >= daysCount
                         } else {
-                            ok = moveuntil.Day == day
+                            ok = moveUntil.Day == day
                         }
                         if (ok) {
                             const r: ZhCalendarDateValue = {
