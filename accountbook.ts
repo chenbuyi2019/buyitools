@@ -1,37 +1,56 @@
 /// <reference path="global.ts" />
 
 if (location.pathname == "/accountbook.html") {
-    interface MoneyEvent {
+
+    const accountdays: string = "accountdays"
+
+    /**
+     * 记账记录
+     * @interface MoneyRecord
+     */
+    interface MoneyRecord {
         Number: number,
         Text: string,
         Waste: boolean
     }
 
-    const detaillist = document.getElementById('detaillist') as HTMLDivElement
+    const divDetailList = document.getElementById('detaillist') as HTMLDivElement
     const inputNewDay = document.getElementById('inputNewDay') as HTMLInputElement
-    inputNewDay.valueAsDate = new Date()
     const butAddNewDay = document.getElementById('butAddNewDay') as HTMLButtonElement
+    const addedDays: string[] = []
+    // 新增一天
     butAddNewDay.addEventListener('click', async function () {
         const dt = inputNewDay.valueAsDate
-        if (dt == null) {
-            return
-        }
-        const days: string[] = await GetLocalValue(accountdays, [])
-        if (days.includes(GetDateString(dt))) {
+        if (dt == null) { return }
+        const oldDays: string[] = await GetLocalValue(accountdays, [])
+        const daystr = GetDateString(dt)
+        if (oldDays.includes(daystr) || addedDays.includes(daystr)) {
             alert("此日期已经存在记录，请直接去修改那一天的记录。")
             return
         }
+        addedDays.push(daystr)
         addDayDetailDiv(dt, false)
     })
 
-    const accountdays: string = "accountdays"
-
-    function SortMoneyEvents(a: MoneyEvent, b: MoneyEvent): number {
+    /**
+     * 记账记录的排序函数，从小到大
+     */
+    function SortMoneyRecords(a: MoneyRecord, b: MoneyRecord): number {
         if (a.Number > b.Number) { return 1 }
-        if (a.Number < b.Number) { return -1 }
         return 0
     }
 
+    /**
+     * 记账记录的排序函数，从大到小
+     */
+    function SortMoneyRecordsRev(a: MoneyRecord, b: MoneyRecord): number {
+        if (a.Number > b.Number) { return -1 }
+        return 0
+    }
+
+    /**
+     * 新增一天的信息 div 到 UI ，如果是没有数据的一天就自动进入编辑模式， addtoEnd 会把新的信息 div 加入到 UI 的最下面
+     */
     function addDayDetailDiv(dt: Date, addtoEnd: boolean) {
         const div = document.createElement('div')
         const time = document.createElement('time')
@@ -63,40 +82,44 @@ if (location.pathname == "/accountbook.html") {
         }
         div.appendChild(e.BoxElement)
         if (addtoEnd) {
-            detaillist.appendChild(div)
+            divDetailList.appendChild(div)
         } else {
-            detaillist.insertBefore(div, detaillist.firstChild)
+            divDetailList.insertBefore(div, divDetailList.firstChild)
         }
     }
 
-    const statResult = document.getElementById('statResult') as HTMLDivElement
+    const divStatResult = document.getElementById('statResult') as HTMLDivElement
     const butDoStat = document.getElementById("butDoStat") as HTMLButtonElement
     const inputStartDate = document.getElementById('inputStartDate') as HTMLInputElement
     const inputEndDate = document.getElementById('inputEndDate') as HTMLInputElement
 
+    /**
+     * 把从 endDate 开始的40天内的记账记录，显示在 UI 里
+     */
     async function displayDatesDetails(endDate: string) {
-        detaillist.innerText = ''
+        addedDays.splice(0, addedDays.length)
+        divDetailList.innerText = ''
         const days: string[] = await GetLocalValue(accountdays, [])
         days.sort(function (a, b) {
             return -a.localeCompare(b)
         })
-        const maxshown = 40
+        const maxshown: number = 40
         let shown = 0
         for (let index = 0; index < days.length; index++) {
             const dtstr = days[index]
             if (dtstr <= endDate) {
                 addDayDetailDiv(new Date(dtstr), true)
                 shown += 1
-                if (shown >= maxshown) {
-                    return
-                }
+                if (shown >= maxshown) { return }
             }
         }
     }
 
+    // 初始化
     (async function () {
         const today = new Date()
         displayDatesDetails(GetDateString(today))
+        inputNewDay.valueAsDate = today
         inputEndDate.valueAsDate = today
         const daysAgo = new Date()
         daysAgo.setDate(today.getDate() - 3)
@@ -140,12 +163,13 @@ if (location.pathname == "/accountbook.html") {
         }
     })();
 
+    // 统计按钮
     butDoStat.addEventListener('click', async function () {
-        statResult.innerText = ""
+        divStatResult.innerText = ""
         const t1 = inputStartDate.valueAsDate
         const t2 = inputEndDate.valueAsDate
         if (t1 === null || t2 === null) {
-            statResult.innerText = "开始和结束时间不能为空白"
+            divStatResult.innerText = "开始和结束时间不能为空白"
             return
         }
         const n1 = t1.getTime()
@@ -158,9 +182,9 @@ if (location.pathname == "/accountbook.html") {
         let sumwaste = 0
         let countdays = 0
         let sumdailyspend = 0
-        const wastes: MoneyEvent[] = []
-        const spendButNoWastes: MoneyEvent[] = []
-        const earns: MoneyEvent[] = []
+        const wastes: MoneyRecord[] = []
+        const spendButNoWastes: MoneyRecord[] = []
+        const earns: MoneyRecord[] = []
         let maxdate = 0
         let mindate = 0
         for (const day of days) {
@@ -169,7 +193,7 @@ if (location.pathname == "/accountbook.html") {
             if (dstart > ms || ms > dend) {
                 continue
             }
-            const events: MoneyEvent[] = await GetLocalValue(accountdays + GetDateString(dt), [])
+            const events: MoneyRecord[] = await GetLocalValue(accountdays + GetDateString(dt), [])
             if (events.length < 1) {
                 continue
             }
@@ -200,7 +224,7 @@ if (location.pathname == "/accountbook.html") {
             }
         }
         if (countdays < 1) {
-            statResult.innerText = "统计结果为空白，1条记录都没有。"
+            divStatResult.innerText = "统计结果为空白，无记录。"
         } else {
             const table = document.createElement('table')
             const addLine = function (title: string, value: any) {
@@ -213,17 +237,13 @@ if (location.pathname == "/accountbook.html") {
                 tr.appendChild(d2)
                 table.appendChild(tr)
             }
-            const addMax = function (title: string, array: Array<MoneyEvent>, reversal: boolean) {
+            const addMax = function (title: string, array: Array<MoneyRecord>, reversal: boolean) {
                 let out = '无'
                 if (array.length > 0) {
                     const shownmax: number = 25
                     out = ''
                     let c = 0
-                    array.sort(function (a, b): number {
-                        const v = SortMoneyEvents(a, b)
-                        if (reversal) { return -v }
-                        return v
-                    })
+                    array.sort(reversal ? SortMoneyRecordsRev : SortMoneyRecords)
                     for (const e of array) {
                         out += `${e.Text} ${e.Number.toFixed(2)}\n`
                         c += 1
@@ -244,7 +264,7 @@ if (location.pathname == "/accountbook.html") {
             addMax('非浪费最花钱的项', spendButNoWastes, false)
             addMax('最浪费钱的项', wastes, false)
             addMax('最赚钱的项', earns, true)
-            statResult.appendChild(table)
+            divStatResult.appendChild(table)
             displayDatesDetails(endDtstr)
             inputStartDate.valueAsDate = new Date(mindate)
             inputEndDate.valueAsDate = new Date(maxdate)
