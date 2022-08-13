@@ -11,13 +11,11 @@ if (location.pathname == "/index.html") {
     const selected: string = 'selected'
     const tools = new Map<string, HTMLAnchorElement>()
 
-    function onLinkClicked(this: HTMLAnchorElement, e: Event) {
-        if (lastSelected != null) {
-            lastSelected.className = ''
-        }
-        this.className = selected
-        lastSelected = this
-        location.hash = this.title
+    function onLinkClicked(ak: HTMLAnchorElement) {
+        if (lastSelected != null) { lastSelected.className = '' }
+        ak.className = selected
+        lastSelected = ak
+        location.hash = ak.title
     }
 
     function addTool(title: string, filename: string) {
@@ -27,24 +25,19 @@ if (location.pathname == "/index.html") {
         a.title = filename
         a.target = tpage
         tlist.appendChild(a)
-        a.addEventListener('click', onLinkClicked)
+        a.addEventListener('click', function (this) { onLinkClicked(this) })
         tools.set(filename, a)
     }
-    
+
     function onHashChanged() {
         let hash = location.hash.replaceAll('#', '')
         if (hash.length > 0) {
             const a = tools.get(hash)
-            if (a != null) {
-                a.click()
-            }
+            if (a != null) { onLinkClicked(a) }
         }
     }
-    onHashChanged()
     window.addEventListener('hashchange', function (e) {
-        if (e.isTrusted) {
-            onHashChanged()
-        }
+        if (e.isTrusted) { onHashChanged() }
     })
 
     addTool("资产", "money")
@@ -52,4 +45,5 @@ if (location.pathname == "/index.html") {
     addTool("日程", "reminder")
     addTool("数据导入导出", "export")
 
+    onHashChanged()
 }

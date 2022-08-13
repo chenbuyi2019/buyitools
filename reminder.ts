@@ -351,6 +351,31 @@
         }
 
         /**
+         * 获取一个组别现有事件的修改用文本
+         */
+        async function getEventsText(groupName: string): Promise<string> {
+            let out = ''
+            out = groupName + '\n\n'
+            if (groupName.length > 0) {
+                const evs = await getGroupEvents(groupName)
+                if (evs == null) {
+                    throw '不应该出现的情况，分组是 null'
+                }
+                out = groupName + '\n\n'
+                for (const e of evs.YearlyEvents) {
+                    out += `${e.Month.toFixed().padStart(2, `0`)}-${e.Day.toFixed().padStart(2, `0`)}${e.UseChineseCalendar ? 'n' : ' '} ${e.Title}\n`
+                }
+                for (const e of evs.IntervalEvents) {
+                    const dt = new Date(e.StartTimeMs)
+                    out += `${GetDateString(dt, '')}${e.MoveForward ? '+' : '-'}${e.DayInterval.toFixed().padEnd(4, ' ')} ${e.Title}\n`
+                }
+            } else {
+                out = `第一行是分组标题\n\n07-01  我是年度事件\n07-01n  我是年度事件（农历）\n20220801+15  往后每15天一次的事件\n20220801-15  当天以及15天之前提醒一次的事件`
+            }
+            return out
+        }
+
+        /**
          * 新增组别 UI ，可以修改和保存事件， 类似 moneyBoxElement
          */
         function addGroupUI(initGroupName: string = '') {
@@ -359,8 +384,6 @@
             div.appendChild(h2)
             const p = document.createElement('p')
             div.appendChild(p)
-            const editor = document.createElement('textarea')
-            div.appendChild(editor)
             const butEdit = document.createElement('button')
             div.appendChild(butEdit)
             const displayEvents = async function () {
@@ -381,122 +404,98 @@
                 }
                 p.innerText = out
                 p.style.display = 'block'
-                editor.style.display = 'none'
                 butEdit.innerText = '编辑'
             }
-            const goEdit = async function () {
-                p.style.display = 'none'
-                editor.style.display = "block"
-                butEdit.innerText = '保存'
-                let out = ''
-                const groupName = h2.innerText
-                if (groupName.length > 0) {
-                    const evs = await getGroupEvents(groupName)
-                    if (evs == null) {
-                        throw '不应该出现的情况，分组是 null'
-                    }
-                    out = groupName + '\n\n'
-                    for (const e of evs.YearlyEvents) {
-                        out += `${e.Month.toFixed().padStart(2, `0`)}-${e.Day.toFixed().padStart(2, `0`)}${e.UseChineseCalendar ? 'n' : ' '} ${e.Title}\n`
-                    }
-                    for (const e of evs.IntervalEvents) {
-                        const dt = new Date(e.StartTimeMs)
-                        out += `${GetDateString(dt, '')}${e.MoveForward ? '+' : '-'}${e.DayInterval.toFixed().padEnd(4, ' ')} ${e.Title}\n`
-                    }
-                } else {
-                    out = `第一行是分组标题\n`
-                }
-                editor.value = out
-            }
             butEdit.addEventListener('click', async function () {
-                if (editor.style.display == 'none') {
-                    goEdit()
-                } else {
-                    const str = editor.value.normalize().trim()
-                    const groupNames = await getAllGroups()
-                    const oldname = h2.innerText.toUpperCase()
-                    let name = oldname
-                    if (str.length < 1) {
-                        const index = groupNames.indexOf(name)
-                        if (index >= 0) {
-                            groupNames.splice(index, 1)
-                            await SetLocalValue(reminderGroup, groupNames)
-                            await SetLocalValue(reminderGroup + name, null)
-                        }
-                        div.remove()
+                const oldGroupName = h2.innerText
+                const oldtxt = await getEventsText(oldGroupName)
+                let lastTxt = oldtxt
+                while (true) {
+                    const newtxt = await InputBox(`编辑日程：${oldGroupName}`, lastTxt)
+                    if (newtxt == null) {
+                        if (oldGroupName.length < 1) { div.remove() }
                         return
                     }
-                    const lines = str.split(/[\n\r]+/g)
                     const YearlyEvents: Array<YearlyEvent> = []
                     const IntervalEvents: Array<IntervalEvent> = []
                     const usedtitles: Array<string> = []
-                    const checkIfTitleRepeated = function (tt: string) {
-                        tt = tt.normalize().toLowerCase()
-                        if (usedtitles.includes(tt)) { throw `事件标题不能重复使用` }
-                        usedtitles.push(tt)
-                    }
-                    for (let index = 0; index < lines.length; index++) {
-                        let line = lines[index].trim()
-                        if (index < 1) {
-                            if (line.length < 1) {
-                                alert('第一行是分组标题，不能为空')
-                                return
-                            }
-                            line = line.toUpperCase()
-                            if (line != name) {
-                                if (groupNames.includes(line)) {
-                                    alert(`已经有其他分组使用了这个标题：${line}`)
-                                    return
+                    const groupNames = await getAllGroups()
+                    let newGroupName = oldGroupName
+                    try {
+                        if (oldGroupName.length > 0 && newtxt.length < 1) {
+                            if (confirm(`空白意味着你要删除整个分组，你确定要删除 ${oldGroupName} 吗？`)) {
+                                const index = groupNames.indexOf(oldGroupName)
+                                if (index >= 0) {
+                                    groupNames.splice(index, 1)
+                                    await SetLocalValue(reminderGroup, groupNames)
+                                    await SetLocalValue(reminderGroup + oldGroupName, null)
                                 }
-                                name = line
-                            }
-                        } else {
-                            if (line.length < 1) {
-                                continue
-                            }
-                            try {
-                                let dtev = parseYearlyEvent(line)
-                                if (dtev == null) {
-                                    let itev = parseIntervalEvent(line)
-                                    if (itev == null) { throw '格式出错，不符合任何条件' }
-                                    checkIfTitleRepeated(itev.Title)
-                                    IntervalEvents.push(itev)
-                                } else {
-                                    checkIfTitleRepeated(dtev.Title)
-                                    YearlyEvents.push(dtev)
-                                }
-                            } catch (error) {
-                                alert(`第 ${index + 1} 行出错：${error}\n${line}`)
+                                div.remove()
                                 return
                             }
                         }
-                    }
-                    if (YearlyEvents.length + IntervalEvents.length < 1) {
-                        alert('分组内不能没有任何事件')
-                        return
-                    }
-                    if (name != oldname) {
-                        if (oldname.length > 0) {
-                            const index = groupNames.indexOf(oldname)
-                            if (index >= 0) {
-                                groupNames.splice(index, 1)
+                        const throwIfTitleRepeated = function (tt: string) {
+                            tt = tt.normalize().toLowerCase()
+                            if (usedtitles.includes(tt)) { throw `事件标题重复使用` }
+                            usedtitles.push(tt)
+                        }
+                        const lines = newtxt.split(/[\n\r]+/g)
+                        for (let index = 0; index < lines.length; index++) {
+                            let line = lines[index].trim()
+                            if (index < 1) {
+                                if (line.length < 1) {
+                                    throw '第一行是分组标题，不能为空'
+                                }
+                                line = line.toUpperCase()
+                                if (line != oldGroupName) {
+                                    if (groupNames.includes(line)) {
+                                        throw `已经有其他分组使用了这个标题：${line}`
+                                    }
+                                    newGroupName = line
+                                }
+                            } else {
+                                if (line.length < 1) { continue }
+                                try {
+                                    let dtev = parseYearlyEvent(line)
+                                    if (dtev == null) {
+                                        let itev = parseIntervalEvent(line)
+                                        if (itev == null) { throw '格式出错，不符合任何条件' }
+                                        throwIfTitleRepeated(itev.Title)
+                                        IntervalEvents.push(itev)
+                                    } else {
+                                        throwIfTitleRepeated(dtev.Title)
+                                        YearlyEvents.push(dtev)
+                                    }
+                                } catch (error) {
+                                    throw `第 ${index + 1} 行出错：${error}\n${line}`
+                                }
                             }
                         }
-                        groupNames.push(name)
-                        groupNames.sort(function (a, b) { return a.localeCompare(b) })
-                        await SetLocalValue(reminderGroup, groupNames)
-                        if (oldname.length > 0) {
-                            await SetLocalValue(reminderGroup + oldname, null)
-                        }
+                        if (YearlyEvents.length + IntervalEvents.length < 1) { throw '分组内不能没有任何事件，如需删除分组，就清空整个文本框。' }
+                    } catch (error) {
+                        lastTxt = newtxt
+                        alert(error)
+                        continue
                     }
                     const evs: Events = {
                         YearlyEvents: YearlyEvents,
                         IntervalEvents: IntervalEvents
                     }
-                    await SetLocalValue(reminderGroup + name, evs)
-                    h2.innerText = name
+                    await SetLocalValue(reminderGroup + newGroupName, evs)
+                    if (newGroupName != oldGroupName) {
+                        if (oldGroupName.length > 0) {
+                            const index = groupNames.indexOf(oldGroupName)
+                            if (index >= 0) { groupNames.splice(index, 1) }
+                            await SetLocalValue(reminderGroup + oldGroupName, null)
+                        }
+                        groupNames.push(newGroupName)
+                        groupNames.sort(function (a, b) { return a.localeCompare(b) })
+                        await SetLocalValue(reminderGroup, groupNames)
+                    }
+                    h2.innerText = newGroupName
                     displayEvents()
                     refreshNoticesUI()
+                    break
                 }
             })
             divGroups.insertBefore(div, divGroups.firstChild)
@@ -504,7 +503,7 @@
                 h2.innerText = initGroupName
                 displayEvents()
             } else {
-                goEdit()
+                butEdit.click()
             }
         }
     } else {
