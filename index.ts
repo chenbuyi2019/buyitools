@@ -33,7 +33,6 @@ if (location.pathname == "/index.html") {
         let hash = location.hash.replaceAll('#', '')
         if (hash.length > 0) {
             const a = tools.get(hash)
-            console.log(hash, a)
             if (a != null) { a.click() }
         }
     }
@@ -44,6 +43,7 @@ if (location.pathname == "/index.html") {
     addTool("资产", "money")
     addTool("记账", "accountbook")
     addTool("日程", "reminder")
+    addTool("好朋友", "friends")
     addTool("数据导入导出", "export")
 
     onHashChanged()

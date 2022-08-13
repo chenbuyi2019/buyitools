@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <style>
+        main {
+            max-width: 600px;
+            margin: 0px auto;
+            font-size: large;
+        }
+
+        #buttons {
+            margin: 5px;
+        }
+
+        #buttons button {
+            padding: 5px;
+            margin-right: 10px;
+        }
+
+        #divList {
+            width: 50%;
+            margin-left: 25%;
+            height: 350px;
+            overflow: scroll;
+        }
+
+        #divFriendName {
+            font-size: x-large;
+            margin: 10px 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <div id="divList"></div>
+        <div id="buttons">
+            <button id="butEditFriendInfo" disabled>编辑</button>
+            <button id="butAddFriend">新增好友</button>
+            <button id="butRandomFriend">随机</button>
+        </div>
+        <div id="divFriendName"></div>
+        <div id="divFriendDetail"></div>
+    </main>
+    <script src="/main.js"></script>
+</body>
+
+</html>

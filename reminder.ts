@@ -430,6 +430,7 @@
                                     await SetLocalValue(reminderGroup + oldGroupName, null)
                                 }
                                 div.remove()
+                                refreshNoticesUI()
                                 return
                             }
                         }

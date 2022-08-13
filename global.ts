@@ -104,6 +104,13 @@ function IsGoodDate(month: number, date: number): boolean {
     return date <= days
 }
 
+/**
+ * 获取 max 和 min 之间的一个随机整数， max 和 min 都是被包括的。已经过测试，分布均匀   
+ */
+function GetRandInt(min: number, max: number): number {
+    return Math.floor(Math.random() * (1 + max - min)) + min
+}
+
 // 如果是后台页面
 if (isBackground) {
     /** 扩展自身页面的链接 */

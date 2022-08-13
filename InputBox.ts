@@ -58,5 +58,6 @@ async function InputBox(title: string, defaultText: string): Promise<string | nu
         divBody.appendChild(butCancel)
         divCover.appendChild(divBody)
         document.body.appendChild(divCover)
+        editor.focus()
     })
 }
