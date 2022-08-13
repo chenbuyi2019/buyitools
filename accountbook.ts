@@ -24,22 +24,6 @@ if (location.pathname == "/accountbook.html") {
     })
 
     /**
-     * 记账记录的排序函数，从小到大
-     */
-    function SortMoneyRecords(a: MoneyRecord, b: MoneyRecord): number {
-        if (a.Number > b.Number) { return 1 }
-        return 0
-    }
-
-    /**
-     * 记账记录的排序函数，从大到小
-     */
-    function SortMoneyRecordsRev(a: MoneyRecord, b: MoneyRecord): number {
-        if (a.Number > b.Number) { return -1 }
-        return 0
-    }
-
-    /**
      * 新增一天的信息 div 到 UI ，如果是没有数据的一天就自动进入编辑模式， addtoEnd 会把新的信息 div 加入到 UI 的最下面
      */
     function addDayDetailDiv(dt: Date, addtoEnd: boolean) {
@@ -67,9 +51,7 @@ if (location.pathname == "/accountbook.html") {
                     changed = true
                 }
             }
-            if (changed) {
-                await SetLocalValue(accountdays, days)
-            }
+            if (changed) { await SetLocalValue(accountdays, days) }
         }
         div.appendChild(e.BoxElement)
         if (addtoEnd) {

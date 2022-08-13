@@ -385,6 +385,7 @@
             const p = document.createElement('p')
             div.appendChild(p)
             const butEdit = document.createElement('button')
+            butEdit.innerText = '编辑'
             div.appendChild(butEdit)
             const displayEvents = async function () {
                 const groupName = h2.innerText
@@ -403,8 +404,6 @@
                     out += `${GetDateZhString(dt)}${e.MoveForward ? '起每' : '之前'} ${e.DayInterval} 天：${e.Title}\n`
                 }
                 p.innerText = out
-                p.style.display = 'block'
-                butEdit.innerText = '编辑'
             }
             butEdit.addEventListener('click', async function () {
                 const oldGroupName = h2.innerText

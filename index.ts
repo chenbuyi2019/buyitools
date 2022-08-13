@@ -33,7 +33,8 @@ if (location.pathname == "/index.html") {
         let hash = location.hash.replaceAll('#', '')
         if (hash.length > 0) {
             const a = tools.get(hash)
-            if (a != null) { onLinkClicked(a) }
+            console.log(hash, a)
+            if (a != null) { a.click() }
         }
     }
     window.addEventListener('hashchange', function (e) {
