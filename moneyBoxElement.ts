@@ -32,7 +32,7 @@ function SortMoneyRecordsRev(a: MoneyRecord, b: MoneyRecord): number {
  * @class MoneyBoxElement
  */
 class MoneyBoxElement {
-    constructor(dataKey: string, startEditIfEmpty: boolean = true) {
+    constructor(title: string, dataKey: string, startEditIfEmpty: boolean = true) {
         this.EditButton.style.display = 'block'
         this.EditButton.innerText = '编辑'
         this.EditButton.style.marginTop = '6px'
@@ -49,7 +49,7 @@ class MoneyBoxElement {
             let output: Array<MoneyRecord> = []
             while (true) {
                 output = []
-                const newTxt = await InputBox("编辑账目：", lastTxt)
+                const newTxt = await InputBox("编辑账目：" + title, lastTxt)
                 if (newTxt == null) { break }
                 try {
                     const lines = newTxt.split(/[\n\r]+/gim)

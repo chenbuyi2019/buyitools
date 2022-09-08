@@ -34,7 +34,7 @@ if (location.pathname == "/accountbook.html") {
         time.innerText = `${GetDateZhString(dt)}\n${GetDaysZhString(dt)}`
         div.className = 'DayDetail'
         div.appendChild(time)
-        const e = new MoneyBoxElement(accountdays + GetDateString(dt))
+        const e = new MoneyBoxElement(`${GetDateZhString(dt)} ${GetDaysZhString(dt)}`, accountdays + GetDateString(dt))
         e.OnDataUpdated = async function (key, value) {
             const k = key.replaceAll(accountdays, '')
             const days: string[] = await GetLocalValue(accountdays, [])
