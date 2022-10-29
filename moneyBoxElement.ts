@@ -128,20 +128,21 @@ class MoneyBoxElement {
                 const num = document.createElement('span')
                 num.innerText = e.Number.toFixed(2)
                 if (e.Number > 0) {
-                    num.style.backgroundColor = '#98e898'
+                    num.style.backgroundColor = 'rgb(186, 255, 171)'
                 } else if (e.Waste) {
-                    num.style.backgroundColor = '#ff6f6f'
+                    num.style.backgroundColor = 'rgb(255, 144, 144)'
                 } else {
-                    num.style.backgroundColor = '#ffb1b1'
+                    num.style.backgroundColor = '#ffd7de'
                 }
                 num.style.display = 'inline-block'
-                num.style.minWidth = '30%'
+                num.style.minWidth = '35%'
                 num.style.textAlign = 'right'
+                num.style.padding = "2px"
+                num.style.fontFamily = 'monospace'
                 const label = document.createElement('label')
                 label.innerText = e.Text
                 label.style.display = num.style.display
                 label.style.marginLeft = '5px'
-                label.style.fontSize = 'small'
                 line.appendChild(num)
                 line.appendChild(label)
                 this.BoxElement.insertBefore(line, this.EditButton)

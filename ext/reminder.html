@@ -13,14 +13,16 @@
 
         main {
             margin: 0px auto;
-            max-width: 500px;
+            max-width: 600px;
         }
 
         #notices {
-            padding: 5px;
-            border: 2px solid black;
-            border-radius: 3px;
             margin: 15px 0px;
+        }
+
+        #notices div {
+            padding: 4px 25px;
+            border-bottom: 1px dotted black;
         }
 
         #notices time {
@@ -30,21 +32,17 @@
             font-weight: bold;
         }
 
-        #notices hr {
-            display: block;
-            border: none;
-            border-top: 2px dashed black;
-        }
-
         #notices label {
             cursor: pointer;
         }
 
+        #buttons button{
+            margin: 0px 10px;
+        }
+
         #groups div {
             padding: 5px;
-            margin-top: 15px;
-            border: 2px solid black;
-            border-radius: 3px;
+            margin: 15px 0px;
         }
 
         #groups h2,
@@ -72,11 +70,12 @@
     <main>
         <div id="notices">
         </div>
-        <div>
+        <div id="buttons">
             <button id="butNewGroup">新增分组</button>
             <button id="butClearCheckedMarks">清除已读记录</button>
+            <button id="butEditGroups">编辑日程</button>
         </div>
-        <div id="groups">
+        <div id="groups" style="display: none;">
         </div>
     </main>
     <script src="/main.js"></script>

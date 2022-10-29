@@ -10,7 +10,7 @@ if (location.pathname == "/export.html") {
         const last = await GetLocalValue(lastExportTime, 0)
         if (last > 100) {
             const dt = new Date(last)
-            divInfo.innerText = `上次导出日期： ${GetDateZhString(dt)}`
+            divInfo.innerText = `上次导出日期： ${GetDateZhString(dt)} ${dt.toLocaleTimeString()}`
         } else {
             divInfo.innerText = "从来都没有导出过。"
         }

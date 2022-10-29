@@ -19,8 +19,13 @@ function GetDateString(d: Date, add: string = '-'): string {
 /**
  * 把 date 转换为 2010 年 01 月 29 日 的汉字格式
  */
-function GetDateZhString(d: Date): string {
-    return `${d.getFullYear()} 年 ${(d.getMonth() + 1).toFixed().padStart(2, '0')} 月 ${d.getDate().toFixed().padStart(2, '0')} 日`
+function GetDateZhString(d: Date, noYear: boolean = false): string {
+    let s = ''
+    if (!noYear) {
+        s = `${d.getFullYear()} 年 `
+    }
+    s += `${(d.getMonth() + 1).toFixed().padStart(2, '0')} 月 ${d.getDate().toFixed().padStart(2, '0')} 日`
+    return s
 }
 
 /**

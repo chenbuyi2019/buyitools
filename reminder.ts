@@ -273,6 +273,16 @@
                 location.reload()
             })
             await refreshNoticesUI()
+            const butEditGroups = document.getElementById("butEditGroups") as HTMLButtonElement
+            butEditGroups.addEventListener("click", function () {
+                if (divGroups.style.display == 'block') {
+                    butEditGroups.innerText = '编辑日程'
+                    divGroups.style.display = 'none'
+                } else {
+                    butEditGroups.innerText = '隐藏细节'
+                    divGroups.style.display = 'block'
+                }
+            })
         })()
 
         /**
@@ -309,11 +319,12 @@
                     refreshClearButton(checked.length)
                 }
             }
-            let lastDate = 1.5
+            let lastDate = 0
             const checked = await getCheckedMarks()
             const today = new Date
             today.setHours(0, 0, 0, 0)
             const now = today.getTime()
+            let lastDivDay: HTMLDivElement | null = null
             for (const e of notices) {
                 const mark = getOutputEventMarkStr(e)
                 const ms = e.Date.getTime()
@@ -321,13 +332,12 @@
                     continue
                 }
                 if (ms != lastDate) {
-                    if (lastDate > 3) {
-                        divNotices.appendChild(document.createElement('hr'))
-                    }
+                    lastDivDay = document.createElement("div")
+                    divNotices.appendChild(lastDivDay)
                     const time = document.createElement('time')
                     time.innerText = GetDateZhString(e.Date) + ' ' + GetDaysZhString(e.Date)
                     time.dateTime = GetDateString(e.Date)
-                    divNotices.appendChild(time)
+                    lastDivDay.appendChild(time)
                     lastDate = ms
                 }
                 const input = document.createElement('input')
@@ -343,9 +353,11 @@
                     input.checked = !input.checked
                     onChange(input.title, input.checked)
                 })
-                divNotices.appendChild(input)
-                divNotices.appendChild(label)
-                divNotices.appendChild(document.createElement('br'))
+                if (lastDivDay != null) {
+                    lastDivDay.appendChild(input)
+                    lastDivDay.appendChild(label)
+                    lastDivDay.appendChild(document.createElement('br'))
+                }
             }
             refreshClearButton(checked.length)
         }

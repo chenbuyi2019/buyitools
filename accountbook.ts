@@ -31,7 +31,7 @@ if (location.pathname == "/accountbook.html") {
         const time = document.createElement('time')
         const dtstr = GetDateString(dt)
         time.dateTime = dtstr
-        time.innerText = `${GetDateZhString(dt)}\n${GetDaysZhString(dt)}`
+        time.innerText = `${GetDateZhString(dt, true)}\n${GetDaysZhString(dt)}`
         div.className = 'DayDetail'
         div.appendChild(time)
         const e = new MoneyBoxElement(`${GetDateZhString(dt)} ${GetDaysZhString(dt)}`, accountdays + GetDateString(dt))
@@ -150,16 +150,16 @@ if (location.pathname == "/accountbook.html") {
         const dstart = Math.min(n1, n2)
         const dend = Math.max(n1, n2)
         const days: string[] = await GetLocalValue(accountdays, [])
-        let sumspend = 0
-        let sumearn = 0
-        let sumwaste = 0
-        let countdays = 0
-        let sumdailyspend = 0
+        let sumSpend = 0
+        let sumEarn = 0
+        let sumWaste = 0
+        let countDays = 0
         const wastes: MoneyRecord[] = []
         const spendButNoWastes: MoneyRecord[] = []
         const earns: MoneyRecord[] = []
         let maxdate = 0
         let mindate = 0
+        const daysSpend: number[] = []
         for (const day of days) {
             const dt = new Date(day)
             const ms = dt.getTime()
@@ -177,26 +177,26 @@ if (location.pathname == "/accountbook.html") {
                 maxdate = Math.max(maxdate, ms)
                 mindate = Math.min(mindate, ms)
             }
-            countdays += 1
+            countDays += 1
+            let daySpend = 0
             for (const e of events) {
                 if (e.Number > 0) {
-                    sumearn += e.Number
+                    sumEarn += e.Number
                     earns.push(e)
                 } else {
-                    sumspend += e.Number
+                    daySpend += e.Number
                     if (e.Waste) {
-                        sumwaste += e.Number
+                        sumWaste += e.Number
                         wastes.push(e)
                     } else {
                         spendButNoWastes.push(e)
                     }
-                    if (e.Number >= -70) {
-                        sumdailyspend += e.Number
-                    }
                 }
             }
+            sumSpend += daySpend
+            if (daySpend < 0) { daysSpend.push(daySpend) }
         }
-        if (countdays < 1) {
+        if (countDays < 1) {
             divStatResult.innerText = "统计结果为空白，无记录。"
         } else {
             const table = document.createElement('table')
@@ -227,13 +227,28 @@ if (location.pathname == "/accountbook.html") {
             }
             const endDtstr = GetDateString(new Date(maxdate))
             addLine("统计范围", `${GetDateString(new Date(mindate))}\n${maxdate != mindate ? endDtstr : ""}`)
-            addLine("有记录的天数", countdays.toFixed(0))
-            addLine("总收入", sumearn.toFixed(2))
-            addLine("总开支（包括浪费）", sumspend.toFixed(2))
-            addLine("总浪费", sumwaste.toFixed(2))
-            const lefts = sumearn + sumspend
+            addLine("有记录的天数", countDays.toFixed(0))
+            addLine("总收入", sumEarn.toFixed(2))
+            addLine("总开支+浪费", sumSpend.toFixed(2))
+            addLine("总浪费", sumWaste.toFixed(2))
+            const lefts = sumEarn + sumSpend
             addLine("总结余", lefts.toFixed(2))
-            addLine("平均每日开支", (sumdailyspend / countdays).toFixed(2))
+            addLine("平均每天开支", (sumSpend / countDays).toFixed(2))
+            if (daysSpend.length > 20) {
+                daysSpend.sort(function (a, b): number {
+                    return b - a
+                })
+                console.log(daysSpend)
+                let start = Math.round(daysSpend.length * 0.5)
+                let count = Math.round(daysSpend.length * 0.2)
+                let s = 0
+                for (let index = 0; index < count; index++) {
+                    s += daysSpend[start + index]
+                    console.log(start + index, daysSpend[start + index])
+                }
+                console.log("count", count)
+                addLine("中上位每天开支", (s / count).toFixed(2))
+            }
             addMax('非浪费最花钱的项', spendButNoWastes, false)
             addMax('最浪费钱的项', wastes, false)
             addMax('最赚钱的项', earns, true)
