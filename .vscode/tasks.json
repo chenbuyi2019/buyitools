@@ -14,9 +14,9 @@
 		{
 			"label": "web-ext build",
 			"type": "shell",
-			"command": "web-ext build --overwrite-dest",
+			"command": "web-ext build -s './ext' -o -v -n 'buyitools.xpi'",
 			"options": {
-				"cwd": "${workspaceFolder}/ext"
+				"cwd": "${workspaceFolder}"
 			},
 			"group": "build"
 		}

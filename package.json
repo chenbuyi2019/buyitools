@@ -1,12 +1,12 @@
 {
   "name": "buyitools",
   "version": "1.0.0",
-  "description": "",
+  "description": "a",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "buyi.dev",
   "license": "ISC",
   "dependencies": {
     "@types/firefox-webext-browser": "^94.0.1"
