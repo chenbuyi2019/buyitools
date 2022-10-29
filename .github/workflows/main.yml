@@ -1,0 +1,21 @@
+on: push
+
+jobs:
+  build:
+    name: compile ts and pack web-ext
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Node
+        uses: actions/setup-node@v1
+      - name: npm install, build and test
+        run: |
+          npm install -g typescript
+          npm install -g web-ext
+          npm install
+          tsc --build
+          web-ext build -s './ext' -o -v -n 'buyitools.xpi'
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v3.1.1
+        with: 
+          path: ./web-ext-artifacts/buyitools.xpi
+          if-no-files-found: error
