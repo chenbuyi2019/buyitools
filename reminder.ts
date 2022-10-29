@@ -278,9 +278,11 @@
                 if (divGroups.style.display == 'block') {
                     butEditGroups.innerText = '编辑日程'
                     divGroups.style.display = 'none'
+                    butNewGroup.style.display = 'none'
                 } else {
                     butEditGroups.innerText = '隐藏细节'
                     divGroups.style.display = 'block'
+                    butNewGroup.style.display = 'inline-block'
                 }
             })
         })()
