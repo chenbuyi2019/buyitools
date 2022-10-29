@@ -4,7 +4,9 @@
 if (location.pathname == "/index.html") {
     document.title = bigTitle
 
-    const tlist = document.getElementById('tlist') as HTMLDivElement
+    const divList = document.getElementById('divList') as HTMLDivElement
+    const divVersion = document.getElementById("divVersion") as HTMLDivElement
+    divVersion.innerText = `v${browser.runtime.getManifest().version}`
     let lastSelected: HTMLAnchorElement | null = null
 
     const tpage: string = 'tpage'
@@ -24,7 +26,7 @@ if (location.pathname == "/index.html") {
         a.href = `/${filename}.html`
         a.title = filename
         a.target = tpage
-        tlist.appendChild(a)
+        divList.appendChild(a)
         a.addEventListener('click', function (this) { onLinkClicked(this) })
         tools.set(filename, a)
     }
@@ -48,5 +50,5 @@ if (location.pathname == "/index.html") {
 
     onHashChanged()
 
-    document.title += " " + browser.runtime.getManifest().version
+    document.title = bigTitle
 }

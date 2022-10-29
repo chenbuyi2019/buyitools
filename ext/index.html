@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/jpeg" href="/icon.jpg"/>
+    <link rel="icon" type="image/jpeg" href="/icon.jpg" />
     <title>Javascript 异常</title>
     <style>
         body {
@@ -21,16 +21,16 @@
             height: 100%;
         }
 
-        #tlist,
+        #divList,
         #tpage {
             border: 2px dashed black;
         }
 
-        #tlist {
+        #divList {
             flex: 1;
         }
 
-        #tlist a {
+        #divList a {
             display: block;
             padding: 8px 6px;
             font-size: large;
@@ -40,13 +40,17 @@
             color: black;
         }
 
-        #tlist a:hover {
+        #divList a:hover {
             background-color: #F7C6C8;
         }
 
-        #tlist .selected {
+        #divList .selected {
             background-color: #C6F7D0;
             font-weight: bold;
+        }
+
+        #divVersion {
+            padding: 3px;
         }
 
         #tpage {
@@ -58,7 +62,9 @@
 
 <body>
     <main>
-        <div id="tlist"></div>
+        <div id="divList">
+            <div id="divVersion"></div>
+        </div>
         <iframe id="tpage" name="tpage"></iframe>
     </main>
     <script src="/main.js"></script>
