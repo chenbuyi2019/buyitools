@@ -10,7 +10,7 @@
 使用 Firefox ESR 或者 Developer Version 来安装和运行扩展   
 需要在 `about:config` 里设置 `xpinstall.signatures.required` 为 `false`    
 
-也可以直接在 [GitHub Actions](https://github.com/chenbuyi2019/buyitools/actions) 里面下载编译好的成品，只是它被二次打包过了。   
+请直接在 [GitHub Actions](https://github.com/chenbuyi2019/buyitools/actions) 里面下载编译好的成品，只是它被二次打包过了。   
 在 Firefox 选择从文件安装的时候，要选的是 `artifacts.zip` 里面的 `xx.xpi` 这个文件才对。  
 
 ## 截图
