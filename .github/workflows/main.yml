@@ -11,6 +11,8 @@ jobs:
           node-version: '>=18.12.0'
       - name: npm install, build and test
         run: |
+          ls ../
+          ls
           npm install -g typescript
           dir
           npm install -g web-ext
