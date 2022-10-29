@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "布衣垃圾箱",
-    "version": "1.1",
+    "version": "22.10.29.2",
     "description": "这是陈布衣自己用的垃圾工具箱。",
     "homepage_url": "https://buyi.dev/",
     "icons": {

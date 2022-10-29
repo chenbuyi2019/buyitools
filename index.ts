@@ -47,4 +47,6 @@ if (location.pathname == "/index.html") {
     addTool("数据导入导出", "export")
 
     onHashChanged()
+
+    document.title += " " + browser.runtime.getManifest().version
 }
