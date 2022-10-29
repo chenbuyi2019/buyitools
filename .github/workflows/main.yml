@@ -12,9 +12,13 @@ jobs:
       - name: npm install, build and test
         run: |
           npm install -g typescript
+          dir
           npm install -g web-ext
+          dir
           npm install
+          dir
           tsc --build
+          dir
           web-ext build -s './ext' -o -v -n 'buyitools.xpi'
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v3.1.1
