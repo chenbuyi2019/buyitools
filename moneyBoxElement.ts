@@ -4,8 +4,21 @@
  * @interface MoneyRecord
  */
 interface MoneyRecord {
-    Number: number,
-    Text: string,
+    /**
+     * 金额
+     */
+    Number: number
+    /**
+     * 标题
+     */
+    Text: string
+    /**
+     * 全职收入
+     */
+    Fulltime: boolean
+    /**
+     * 多余开销
+     */
     Waste: boolean
 }
 
@@ -13,16 +26,14 @@ interface MoneyRecord {
  * 记账记录的排序函数，从小到大
  */
 function SortMoneyRecords(a: MoneyRecord, b: MoneyRecord): number {
-    if (a.Number > b.Number) { return 1 }
-    return 0
+    return a.Number - b.Number
 }
 
 /**
  * 记账记录的排序函数，从大到小
  */
 function SortMoneyRecordsRev(a: MoneyRecord, b: MoneyRecord): number {
-    if (a.Number > b.Number) { return -1 }
-    return 0
+    return SortMoneyRecords(b, a)
 }
 
 /**
@@ -41,10 +52,16 @@ class MoneyBoxElement {
         this.BoxElement.appendChild(this.EditButton)
         const me: MoneyBoxElement = this;
         this.EditButton.addEventListener('click', async function () {
-            const regEventLine = /([-\.0-9]+)(w?)\s+(.+)/i
+            const regEventLine = /([-\.0-9]+)([wf]?)\s+(.+)/i
             let lastTxt = ""
             for (const e of me.Records) {
-                lastTxt += `${e.Number.toFixed(2)}${e.Waste ? "w" : ""} ${e.Text}\n`
+                let flag = ""
+                if (e.Waste) {
+                    flag = "w"
+                } else if (e.Fulltime) {
+                    flag = "f"
+                }
+                lastTxt += `${e.Number.toFixed(2)}${flag} ${e.Text}\n`
             }
             let output: Array<MoneyRecord> = []
             while (true) {
@@ -59,11 +76,21 @@ class MoneyBoxElement {
                         const r = regEventLine.exec(line)
                         if (r == null) { throw `不符合格式：\n${line}` }
                         const num = parseFloat(parseFloat(r[1]).toFixed(2))
-                        const waste = num < 0 && r[2] != null && r[2].length > 0
+                        let fulltime = false
+                        let waste = false
+                        if (r[2] != null && r[2].length > 0) {
+                            if (num < 0 && r[2] == 'w') {
+                                waste = true
+                            } else if (num > 0 && r[2] == 'f') {
+                                fulltime = true
+                            } else {
+                                throw `无法识别的标记：\n${line}`
+                            }
+                        }
                         const tt = r[3]
                         if (tt.length < 1 || tt.length > 20) { throw `说明文字过长或为空：\n${num} ${tt}` }
                         const e: MoneyRecord = {
-                            Waste: waste,
+                            Waste: waste, Fulltime: fulltime,
                             Number: num,
                             Text: tt
                         }
@@ -127,7 +154,9 @@ class MoneyBoxElement {
                 line.className = "MoneyBoxLine"
                 const num = document.createElement('span')
                 num.innerText = e.Number.toFixed(2)
-                if (e.Number > 0) {
+                if (e.Fulltime) {
+                    num.style.backgroundColor = 'rgb(134, 210, 255)'
+                } else if (e.Number > 0) {
                     num.style.backgroundColor = 'rgb(186, 255, 171)'
                 } else if (e.Waste) {
                     num.style.backgroundColor = 'rgb(255, 144, 144)'

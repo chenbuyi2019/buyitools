@@ -100,7 +100,7 @@ if (location.pathname == "/accountbook.html") {
         const statbuttons = document.getElementById('statbuttons') as HTMLDivElement
         const thisYear = today.getFullYear()
         const thisMonth = today.getMonth()
-        for (const monthDiff of [0, 1, 2, 3, 4, 5]) {
+        for (let monthDiff = 0; monthDiff < 15; monthDiff++) {
             const button = document.createElement("button")
             let statYear = thisYear
             let statMonth = thisMonth - monthDiff
@@ -153,13 +153,14 @@ if (location.pathname == "/accountbook.html") {
         let sumSpend = 0
         let sumEarn = 0
         let sumWaste = 0
+        let sumFulltime = 0
         let countDays = 0
+        const fulltimesEarns: MoneyRecord[] = []
+        const otherEarns: MoneyRecord[] = []
         const wastes: MoneyRecord[] = []
         const spendButNoWastes: MoneyRecord[] = []
-        const earns: MoneyRecord[] = []
         let maxdate = 0
         let mindate = 0
-        const daysSpend: number[] = []
         for (const day of days) {
             const dt = new Date(day)
             const ms = dt.getTime()
@@ -178,13 +179,17 @@ if (location.pathname == "/accountbook.html") {
                 mindate = Math.min(mindate, ms)
             }
             countDays += 1
-            let daySpend = 0
             for (const e of events) {
                 if (e.Number > 0) {
                     sumEarn += e.Number
-                    earns.push(e)
+                    if (e.Fulltime) {
+                        sumFulltime += e.Number
+                        fulltimesEarns.push(e)
+                    } else {
+                        otherEarns.push(e)
+                    }
                 } else {
-                    daySpend += e.Number
+                    sumSpend += e.Number
                     if (e.Waste) {
                         sumWaste += e.Number
                         wastes.push(e)
@@ -193,8 +198,6 @@ if (location.pathname == "/accountbook.html") {
                     }
                 }
             }
-            sumSpend += daySpend
-            if (daySpend < 0) { daysSpend.push(daySpend) }
         }
         if (countDays < 1) {
             divStatResult.innerText = "统计结果为空白，无记录。"
@@ -229,29 +232,17 @@ if (location.pathname == "/accountbook.html") {
             addLine("统计范围", `${GetDateString(new Date(mindate))}\n${maxdate != mindate ? endDtstr : ""}`)
             addLine("有记录的天数", countDays.toFixed(0))
             addLine("总收入", sumEarn.toFixed(2))
+            addLine("全职收入", sumFulltime.toFixed(2))
+            addLine("非全职收入", (sumEarn - sumFulltime).toFixed(2))
             addLine("总开支+浪费", sumSpend.toFixed(2))
             addLine("总浪费", sumWaste.toFixed(2))
             const lefts = sumEarn + sumSpend
             addLine("总结余", lefts.toFixed(2))
             addLine("平均每天开支", (sumSpend / countDays).toFixed(2))
-            if (daysSpend.length > 20) {
-                daysSpend.sort(function (a, b): number {
-                    return b - a
-                })
-                console.log(daysSpend)
-                let start = Math.round(daysSpend.length * 0.5)
-                let count = Math.round(daysSpend.length * 0.2)
-                let s = 0
-                for (let index = 0; index < count; index++) {
-                    s += daysSpend[start + index]
-                    console.log(start + index, daysSpend[start + index])
-                }
-                console.log("count", count)
-                addLine("中上位每天开支", (s / count).toFixed(2))
-            }
-            addMax('非浪费最花钱的项', spendButNoWastes, false)
-            addMax('最浪费钱的项', wastes, false)
-            addMax('最赚钱的项', earns, true)
+            addMax('非浪费最贵的', spendButNoWastes, false)
+            addMax('最浪费的', wastes, false)
+            addMax('全职最赚的', fulltimesEarns, true)
+            addMax('非全职最赚的', otherEarns, true)
             divStatResult.appendChild(table)
             displayDatesDetails(endDtstr)
             inputStartDate.valueAsDate = new Date(mindate)
