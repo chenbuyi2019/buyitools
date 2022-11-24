@@ -100,7 +100,7 @@ if (location.pathname == "/accountbook.html") {
         const statbuttons = document.getElementById('statbuttons') as HTMLDivElement
         const thisYear = today.getFullYear()
         const thisMonth = today.getMonth()
-        for (let monthDiff = 0; monthDiff < 15; monthDiff++) {
+        for (let monthDiff = 0; monthDiff < 6; monthDiff++) {
             const button = document.createElement("button")
             let statYear = thisYear
             let statMonth = thisMonth - monthDiff
@@ -216,7 +216,7 @@ if (location.pathname == "/accountbook.html") {
             const addMax = function (title: string, array: Array<MoneyRecord>, reversal: boolean) {
                 let out = '无'
                 if (array.length > 0) {
-                    const shownmax: number = 25
+                    const shownmax: number = 35
                     out = ''
                     let c = 0
                     array.sort(reversal ? SortMoneyRecordsRev : SortMoneyRecords)
@@ -234,7 +234,8 @@ if (location.pathname == "/accountbook.html") {
             addLine("总收入", sumEarn.toFixed(2))
             addLine("全职收入", sumFulltime.toFixed(2))
             addLine("非全职收入", (sumEarn - sumFulltime).toFixed(2))
-            addLine("总开支+浪费", sumSpend.toFixed(2))
+            addLine("总开支", sumSpend.toFixed(2))
+            addLine("非浪费开支", (sumSpend - sumWaste).toFixed(2))
             addLine("总浪费", sumWaste.toFixed(2))
             const lefts = sumEarn + sumSpend
             addLine("总结余", lefts.toFixed(2))
