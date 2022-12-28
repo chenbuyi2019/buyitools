@@ -98,30 +98,26 @@ if (location.pathname == "/accountbook.html") {
         daysAgo.setDate(today.getDate() - 3)
         inputStartDate.valueAsDate = daysAgo
         const statbuttons = document.getElementById('statbuttons') as HTMLDivElement
-        const thisYear = today.getFullYear()
-        const thisMonth = today.getMonth()
-        for (let monthDiff = 0; monthDiff < 6; monthDiff++) {
-            const button = document.createElement("button")
-            let statYear = thisYear
-            let statMonth = thisMonth - monthDiff
-            while (statMonth < 0) {
-                statMonth += 12
-                statYear -= 1
-            }
-            button.innerText = `${(statMonth + 1).toFixed().padStart(2, "0")}月`
-            button.addEventListener('click', function () {
-                let startDay = new Date()
-                startDay.setHours(23, 0, 0, 0)
-                startDay.setFullYear(statYear, statMonth, 1)
-                inputStartDate.valueAsDate = startDay
-                startDay.setDate(GetDaysCountInMonth(statMonth + 1))
-                inputEndDate.valueAsDate = startDay
+        const addMoveMonthButton = function (text: string, count: number) {
+            const but = document.createElement('button')
+            but.innerText = text
+            but.addEventListener('click', function () {
+                let dt = inputStartDate.valueAsDate
+                if (dt == null) { return }
+                let year = dt.getFullYear()
+                let month = dt.getMonth()
+                dt.setFullYear(year, month + count, 1)
+                inputStartDate.valueAsDate = dt
+                dt.setDate(GetDaysCountInMonth(dt.getMonth() + 1))
+                inputEndDate.valueAsDate = dt
                 butDoStat.click()
             })
-            statbuttons.appendChild(button)
+            statbuttons.append(but)
         }
-        statbuttons.appendChild(document.createElement("br"))
-        for (const daysDiff of [60, 90, 180, 365]) {
+        addMoveMonthButton('上个月', -1)
+        addMoveMonthButton('下个月', 1)
+        statbuttons.append(document.createElement("br"))
+        for (const daysDiff of [60, 92, 185, 366]) {
             const button = document.createElement("button")
             button.innerText = `近${daysDiff}天`
             button.addEventListener('click', function () {
@@ -152,13 +148,9 @@ if (location.pathname == "/accountbook.html") {
         const days: string[] = await GetLocalValue(accountdays, [])
         let sumSpend = 0
         let sumEarn = 0
-        let sumWaste = 0
-        let sumFulltime = 0
         let countDays = 0
-        const fulltimesEarns: MoneyRecord[] = []
-        const otherEarns: MoneyRecord[] = []
-        const wastes: MoneyRecord[] = []
-        const spendButNoWastes: MoneyRecord[] = []
+        const earns = new Map<string, number>()
+        const spends = new Map<string, number>()
         let maxdate = 0
         let mindate = 0
         for (const day of days) {
@@ -180,49 +172,47 @@ if (location.pathname == "/accountbook.html") {
             }
             countDays += 1
             for (const e of events) {
+                let mp = earns
                 if (e.Number > 0) {
                     sumEarn += e.Number
-                    if (e.Fulltime) {
-                        sumFulltime += e.Number
-                        fulltimesEarns.push(e)
-                    } else {
-                        otherEarns.push(e)
-                    }
                 } else {
+                    mp = spends
                     sumSpend += e.Number
-                    if (e.Waste) {
-                        sumWaste += e.Number
-                        wastes.push(e)
-                    } else {
-                        spendButNoWastes.push(e)
-                    }
                 }
+                let oldNumber = mp.get(e.Text)
+                if (oldNumber == null) { oldNumber = 0 }
+                mp.set(e.Text, oldNumber + e.Number)
             }
         }
         if (countDays < 1) {
             divStatResult.innerText = "统计结果为空白，无记录。"
         } else {
-            const table = document.createElement('table')
-            const addLine = function (title: string, value: any) {
-                const tr = document.createElement('tr')
-                const d1 = document.createElement('td')
-                d1.innerText = title
-                const d2 = document.createElement('td')
-                d2.innerText = String(value)
-                tr.appendChild(d1)
-                tr.appendChild(d2)
-                table.appendChild(tr)
+            const getArrayFromMap = function (mp: Map<string, number>): Array<MoneyRecord> {
+                let out: Array<MoneyRecord> = []
+                for (const kv of mp) {
+                    out.push({ Text: kv[0], Number: kv[1] })
+                }
+                return out
             }
-            const addMax = function (title: string, array: Array<MoneyRecord>, reversal: boolean) {
+            const addLine = function (title: string, value: any) {
+                const d1 = document.createElement('div')
+                d1.innerText = title
+                const d2 = document.createElement('div')
+                d2.innerText = String(value)
+                divStatResult.append(d1, d2)
+            }
+            const addMax = function (title: string, array: Array<MoneyRecord>, desc: boolean) {
                 let out = '无'
                 if (array.length > 0) {
-                    const shownmax: number = 35
+                    const shownmax: number = 25
                     out = ''
                     let c = 0
-                    array.sort(reversal ? SortMoneyRecordsRev : SortMoneyRecords)
+                    array.sort(desc ? SortMoneyRecordsDesc : SortMoneyRecordsAec)
+                    let sum = 0
                     for (const e of array) {
                         out += `${e.Text} ${e.Number.toFixed(2)}\n`
                         c += 1
+                        sum += e.Number
                         if (c >= shownmax) { break }
                     }
                 }
@@ -232,19 +222,12 @@ if (location.pathname == "/accountbook.html") {
             addLine("统计范围", `${GetDateString(new Date(mindate))}\n${maxdate != mindate ? endDtstr : ""}`)
             addLine("有记录的天数", countDays.toFixed(0))
             addLine("总收入", sumEarn.toFixed(2))
-            addLine("全职收入", sumFulltime.toFixed(2))
-            addLine("非全职收入", (sumEarn - sumFulltime).toFixed(2))
             addLine("总开支", sumSpend.toFixed(2))
-            addLine("非浪费开支", (sumSpend - sumWaste).toFixed(2))
-            addLine("总浪费", sumWaste.toFixed(2))
             const lefts = sumEarn + sumSpend
             addLine("总结余", lefts.toFixed(2))
             addLine("平均每天开支", (sumSpend / countDays).toFixed(2))
-            addMax('非浪费最贵的', spendButNoWastes, false)
-            addMax('最浪费的', wastes, false)
-            addMax('全职最赚的', fulltimesEarns, true)
-            addMax('非全职最赚的', otherEarns, true)
-            divStatResult.appendChild(table)
+            addMax('最贵的', getArrayFromMap(spends), false)
+            addMax('最赚的', getArrayFromMap(earns), true)
             displayDatesDetails(endDtstr)
             inputStartDate.valueAsDate = new Date(mindate)
             inputEndDate.valueAsDate = new Date(maxdate)

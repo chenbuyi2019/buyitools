@@ -12,28 +12,20 @@ interface MoneyRecord {
      * 标题
      */
     Text: string
-    /**
-     * 全职收入
-     */
-    Fulltime: boolean
-    /**
-     * 多余开销
-     */
-    Waste: boolean
 }
 
 /**
  * 记账记录的排序函数，从小到大
  */
-function SortMoneyRecords(a: MoneyRecord, b: MoneyRecord): number {
+function SortMoneyRecordsAec(a: MoneyRecord, b: MoneyRecord): number {
     return a.Number - b.Number
 }
 
 /**
  * 记账记录的排序函数，从大到小
  */
-function SortMoneyRecordsRev(a: MoneyRecord, b: MoneyRecord): number {
-    return SortMoneyRecords(b, a)
+function SortMoneyRecordsDesc(a: MoneyRecord, b: MoneyRecord): number {
+    return SortMoneyRecordsAec(b, a)
 }
 
 /**
@@ -52,16 +44,10 @@ class MoneyBoxElement {
         this.BoxElement.appendChild(this.EditButton)
         const me: MoneyBoxElement = this;
         this.EditButton.addEventListener('click', async function () {
-            const regEventLine = /([-\.0-9]+)([wf]?)\s+(.+)/i
+            const regEventLine = /([-\.0-9]+)\s+(.+)/i
             let lastTxt = ""
             for (const e of me.Records) {
-                let flag = ""
-                if (e.Waste) {
-                    flag = "w"
-                } else if (e.Fulltime) {
-                    flag = "f"
-                }
-                lastTxt += `${e.Number.toFixed(2)}${flag} ${e.Text}\n`
+                lastTxt += `${e.Number.toFixed(2)} ${e.Text}\n`
             }
             let output: Array<MoneyRecord> = []
             while (true) {
@@ -76,24 +62,9 @@ class MoneyBoxElement {
                         const r = regEventLine.exec(line)
                         if (r == null) { throw `不符合格式：\n${line}` }
                         const num = parseFloat(parseFloat(r[1]).toFixed(2))
-                        let fulltime = false
-                        let waste = false
-                        if (r[2] != null && r[2].length > 0) {
-                            if (num < 0 && r[2] == 'w') {
-                                waste = true
-                            } else if (num > 0 && r[2] == 'f') {
-                                fulltime = true
-                            } else {
-                                throw `无法识别的标记：\n${line}`
-                            }
-                        }
-                        const tt = r[3]
+                        const tt = r[2]
                         if (tt.length < 1 || tt.length > 20) { throw `说明文字过长或为空：\n${num} ${tt}` }
-                        const e: MoneyRecord = {
-                            Waste: waste, Fulltime: fulltime,
-                            Number: num,
-                            Text: tt
-                        }
+                        const e: MoneyRecord = { Number: num, Text: tt }
                         output.push(e)
                     }
                 } catch (error) {
@@ -148,26 +119,18 @@ class MoneyBoxElement {
             e.remove()
         }
         if (this.Records.length > 0) {
-            this.Records.sort(SortMoneyRecords)
+            this.Records.sort(SortMoneyRecordsAec)
             for (const e of this.Records) {
                 const line = document.createElement('div')
                 line.className = "MoneyBoxLine"
                 const num = document.createElement('span')
                 num.innerText = e.Number.toFixed(2)
-                if (e.Fulltime) {
-                    num.style.backgroundColor = 'rgb(134, 210, 255)'
-                } else if (e.Number > 0) {
-                    num.style.backgroundColor = 'rgb(186, 255, 171)'
-                } else if (e.Waste) {
-                    num.style.backgroundColor = 'rgb(255, 144, 144)'
-                } else {
-                    num.style.backgroundColor = '#ffd7de'
-                }
+                num.style.backgroundColor = e.Number > 0 ? 'rgb(186, 255, 171)' : '#ffd7de'
                 num.style.display = 'inline-block'
                 num.style.minWidth = '35%'
                 num.style.textAlign = 'right'
                 num.style.padding = "2px"
-                num.style.fontFamily = 'monospace'
+                num.style.fontFamily = `monospace`
                 const label = document.createElement('label')
                 label.innerText = e.Text
                 label.style.display = num.style.display

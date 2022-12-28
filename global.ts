@@ -53,20 +53,16 @@ function GetDaysZhString(d: Date): string {
     return '周' + '日一二三四五六'.charAt(target.getDay())
 }
 
-/** 推送消息绑定的跳转子页面信息 */
-const NoticeIdLinks = new Map<string, string>()
-
 /**
  * 发送推送消息
  */
-async function SendNotice(title: string, text: string, targetPage: string) {
-    const id = await browser.notifications.create({
+async function SendNotice(title: string, text: string) {
+    await browser.notifications.create({
         type: "basic",
         message: text,
         title: `${title} - ${bigTitle}`,
         iconUrl: "/icon.jpg"
     })
-    NoticeIdLinks.set(id, targetPage)
 }
 
 /**
@@ -126,9 +122,9 @@ if (isBackground) {
      * 如果浏览器有开着的扩展页面的标签页，就直接跳转，
      * 如果没有就新建
      **/
-    const switchToIndex = async function (targetPage: string) {
+    const switchToIndex = async function () {
         const tabs = await browser.tabs.query({ currentWindow: true, title: bigTitle })
-        const newURL = idurl + "index.html#" + targetPage
+        const newURL = idurl + "index.html"
         for (const tab of tabs) {
             const u = tab.url
             const id = tab.id
@@ -143,11 +139,9 @@ if (isBackground) {
         browser.tabs.create({ url: newURL, active: true })
     }
     browser.browserAction.onClicked.addListener(function () {
-        switchToIndex("")
+        switchToIndex()
     })
     browser.notifications.onClicked.addListener(function (nid: string) {
-        let target = NoticeIdLinks.get(nid)
-        if (target == null) { target = '' }
-        switchToIndex(target)
+        switchToIndex()
     })
 }

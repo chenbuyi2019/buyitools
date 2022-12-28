@@ -529,13 +529,13 @@
             const notices = await getNotices()
             const checked = await getCheckedMarks()
             let sent = 0
-            let timeLimit = oneDay * 1.1 // 时间在 1.1 天之内的事件
+            let timeLimit = oneDay * 1.3 // 时间在 1.3 天之内的事件
             for (const e of notices) {
                 const ms = e.Date.getTime()
                 if (ms - now > timeLimit) { continue }
                 const mark = getOutputEventMarkStr(e)
                 if (checked.includes(mark)) { continue }
-                await SendNotice('日程提醒', `${e.Title}\n${e.GroupName}\n${GetDaysZhString(e.Date)}`, "reminder")
+                await SendNotice('日程提醒', `${e.Title}\n${e.GroupName}\n${GetDaysZhString(e.Date)}`)
                 sent += 1
             }
             if (sent > 0) {

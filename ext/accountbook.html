@@ -25,7 +25,7 @@
         #detaillist .DayDetail {
             display: flex;
             padding: 3px;
-            border-bottom: 2px double rgba(0, 0, 0, 0.5);
+            border-bottom: 1px dotted black;
         }
 
         #detaillist time {
@@ -52,21 +52,15 @@
         }
 
         #statResult {
-            overflow: scroll;
+            overflow-y: scroll;
+            display: grid;
+            grid-template-columns: auto auto;
         }
 
-        #statResult table {
-            table-layout: fixed;
-            margin: 3px;
-            border-top: 1px solid black;
-            border-left: 1px solid black;
-        }
-
-        #statResult td {
-            border-bottom: 1px solid black;
-            border-right: 1px solid black;
+        #statResult div {
+            border-bottom: 1px dotted black;
             text-align: right;
-            padding: 3px;
+            padding: 2px 4px;
         }
     </style>
 </head>
